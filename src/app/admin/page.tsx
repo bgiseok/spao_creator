@@ -591,37 +591,38 @@ export default function AdminPage() {
             </AnimatePresence>
 
 
-            <div className="w-full max-w-4xl mt-12 mb-20 px-4 flex flex-col items-center">
-                <header className="mb-10 flex flex-col items-center relative gap-3">
+            <div className="w-full max-w-5xl mt-12 mb-20 px-4 flex flex-col items-center">
+                <header className="w-full mb-10 flex flex-col items-center relative gap-4">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">스파오 크리에이터 카탈로그</h1>
-                    <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-full shadow-sm border border-gray-100">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span className="text-sm font-bold text-gray-700 [word-break:keep-all]">{supporter.name}님, 잘 부탁드립니다 : )</span>
+                    <div className="w-full flex items-center justify-between bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                            <span className="text-base font-bold text-gray-700 [word-break:keep-all]">{supporter.name}님, 오늘 하루도 힘내세요! : )</span>
+                        </div>
 
-                        <div className="w-px h-3 bg-gray-200 mx-1"></div>
+                        <div className="flex items-center gap-2">
+                            {/* Settings Button */}
+                            <button
+                                onClick={() => setIsEditingProfile(true)}
+                                className="text-gray-400 hover:text-black p-2 hover:bg-gray-100 rounded-full transition-all flex items-center justify-center"
+                                title="프로필 수정"
+                            >
+                                <Settings className="w-5 h-5" />
+                            </button>
 
-                        {/* Settings Button */}
-                        <button
-                            onClick={() => setIsEditingProfile(true)}
-                            className="text-gray-400 hover:text-black p-2 hover:bg-gray-100 rounded-full transition-all flex items-center justify-center"
-                            title="프로필 수정"
-                        >
-                            <Settings className="w-5 h-5" />
-                        </button>
-
-                        <button
-                            onClick={handleLogout}
-                            className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all flex items-center justify-center"
-                            title="로그아웃"
-                        >
-                            <LogOut className="w-5 h-5" />
-                        </button>
+                            <button
+                                onClick={handleLogout}
+                                className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all flex items-center justify-center"
+                                title="로그아웃"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
-
                 </header>
 
                 {/* Search Section */}
-                <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 sticky top-4 z-10">
+                <div className="w-full bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 sticky top-4 z-10">
                     {/* Catalog Selector for Adding */}
                     <div className="mb-3 flex items-center justify-between">
                         <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
@@ -678,10 +679,10 @@ export default function AdminPage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="mb-10"
+                            className="w-full mb-12"
                         >
-                            <div className="flex justify-between items-center mb-4 px-2">
-                                <h2 className="text-lg font-bold text-gray-900">검색 결과 <span className="text-blue-600">{searchResults.length}</span></h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">검색 결과 ({searchResults.length})</h3>
                                 {selectedProducts.length > 0 && (
                                     <button
                                         onClick={handleSave}
@@ -737,7 +738,7 @@ export default function AdminPage() {
                 </AnimatePresence>
 
                 {/* Saved List Preview */}
-                <div id="saved-list">
+                <div id="saved-list" className="w-full">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 px-1 gap-4">
                         <div>
                             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
