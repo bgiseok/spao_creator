@@ -922,11 +922,35 @@ export default function AdminPage() {
                             </div>
                         )}
                     </AnimatePresence>
+                    {/* Reorder Function */}
+                    const handleReorder = async (newOrder: Product[]) => {
+                        setSavedProducts(newOrder); // Optimistic UI update
 
-                    <div className="grid grid-cols-1 gap-3">
-                        {savedProducts.map((item, idx) => (
-                            <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all">
-                                <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100" />
+                        // Debounce or just fire? Fire for now.
+                        const updates = newOrder.map((item, index) => ({
+                        id: item.id,
+                    sortOrder: index + 1 // 1-based order
+                        }));
+
+                    try {
+                        await fetch('/api/products/reorder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ items: updates })
+                        });
+                        } catch(e) {
+                        console.error("Reorder failed", e);
+                            // Revert? (Complex for MVP, skip for now)
+                        }
+                    };
+
+                    <Reorder.Group axis="y" values={savedProducts} onReorder={handleReorder} className="space-y-3">
+                        {savedProducts.map((item) => (
+                            <Reorder.Item key={item.id} value={item} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-shadow relative">
+                                <div className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-500">
+                                    <GripVertical className="w-5 h-5" />
+                                </div>
+                                <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100 select-none pointer-events-none" />
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-all">{item.name}</h3>
                                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -955,14 +979,15 @@ export default function AdminPage() {
                                         {deletingId === item.id ? <Loader2 className="animate-spin w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
                                     </button>
                                 </div>
-                            </div>
+                            </Reorder.Item>
                         ))}
-                        {savedProducts.length === 0 && searchResults.length === 0 && (
-                            <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-                                <p>등록된 상품이 없습니다.</p>
-                            </div>
-                        )}
-                    </div>
+                    </Reorder.Group>
+
+                    {savedProducts.length === 0 && searchResults.length === 0 && (
+                        <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                            <p>등록된 상품이 없습니다.</p>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -31,6 +31,7 @@ export const products = pgTable("products", {
     clickCount: integer("click_count").default(0),
     imageUrl: text("image_url").notNull(),
     linkUrl: text("link_url").notNull(),
+    sortOrder: integer("sort_order").default(0),
     createdAt: timestamp("created_at").defaultNow(),
 });
 
