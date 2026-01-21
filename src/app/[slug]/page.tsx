@@ -50,8 +50,13 @@ export default async function LinkTreePage({ params }: { params: Promise<{ slug:
                                     alt={product.name}
                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
-                                <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-lg">
-                                    {product.price}
+                                <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md text-white text-xs px-2 py-1 rounded-lg">
+                                    <div className="flex items-center gap-1">
+                                        {product.discountRate && (
+                                            <span className="text-red-400 font-bold">{product.discountRate}%</span>
+                                        )}
+                                        <span className="font-bold">{product.price}</span>
+                                    </div>
                                 </div>
                             </div>
                             <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">

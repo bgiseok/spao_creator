@@ -11,6 +11,8 @@ interface Product {
     id: number;
     name: string;
     price: string;
+    originalPrice?: string;
+    discountRate?: number;
     imageUrl: string;
     url: string;
 }
@@ -262,6 +264,8 @@ export default function AdminPage() {
                         supporterId: supporter.id,
                         name: product.name,
                         price: product.price,
+                        originalPrice: product.originalPrice,
+                        discountRate: product.discountRate,
                         imageUrl: product.imageUrl,
                         linkUrl: generateUtmUrl(product.url, supporter.slug, product.name)
                     }),
@@ -447,7 +451,7 @@ export default function AdminPage() {
 
                 {/* Search Section */}
                 <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 sticky top-4 z-10">
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <input
                             type="text"
                             placeholder="예: 데님 재킷, 슬랙스 (URL도 가능)"
@@ -459,7 +463,7 @@ export default function AdminPage() {
                         <button
                             onClick={handleSearch}
                             disabled={loading}
-                            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 font-bold transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-3 sm:py-0 font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap w-full sm:w-auto"
                         >
                             {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <Search className="w-5 h-5" />}
                             검색
@@ -513,8 +517,16 @@ export default function AdminPage() {
                                                 )}
                                             </div>
                                             <div className="p-3">
-                                                <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-snug">{item.name}</h3>
-                                                <p className="text-gray-500 text-xs mt-1 font-medium">{item.price}</p>
+                                                <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-snug break-keep">{item.name}</h3>
+                                                <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                                    {item.discountRate && (
+                                                        <span className="text-red-600 font-bold text-sm">{item.discountRate}%</span>
+                                                    )}
+                                                    <span className="text-gray-900 font-bold text-sm">{item.price}</span>
+                                                    {item.originalPrice && (
+                                                        <span className="text-gray-400 text-xs line-through">{item.originalPrice}</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -539,7 +551,12 @@ export default function AdminPage() {
                                 <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100" />
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-bold text-gray-900 truncate [word-break:keep-all] whitespace-normal line-clamp-2">{item.name}</h3>
-                                    <p className="text-gray-500 text-sm mt-0.5">{item.price}</p>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                        {item.discountRate && (
+                                            <span className="text-red-600 font-bold text-xs">{item.discountRate}%</span>
+                                        )}
+                                        <span className="text-gray-500 text-sm">{item.price}</span>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => handleDeleteProduct(item.id)}

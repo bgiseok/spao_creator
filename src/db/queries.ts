@@ -8,13 +8,23 @@ import { eq } from 'drizzle-orm';
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql, { schema });
 
-export async function addProduct(supporterId: number, name: string, price: string, imageUrl: string, linkUrl: string) {
+export async function addProduct(
+  supporterId: number,
+  name: string,
+  price: string,
+  imageUrl: string,
+  linkUrl: string,
+  originalPrice?: string,
+  discountRate?: number
+) {
   return await db.insert(products).values({
     supporterId,
     name,
     price,
     imageUrl,
-    linkUrl
+    linkUrl,
+    originalPrice,
+    discountRate
   }).returning();
 }
 

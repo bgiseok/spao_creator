@@ -4,7 +4,7 @@ import { addProduct } from '@/db/queries';
 
 export async function POST(request: Request) {
     try {
-        const { supporterId, name, price, imageUrl, linkUrl } = await request.json();
+        const { supporterId, name, price, imageUrl, linkUrl, originalPrice, discountRate } = await request.json();
 
         if (!supporterId || !name || !price || !imageUrl || !linkUrl) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -15,7 +15,9 @@ export async function POST(request: Request) {
             name,
             price,
             imageUrl,
-            linkUrl
+            linkUrl,
+            originalPrice,
+            discountRate
         );
 
         return NextResponse.json({ product: newProduct[0] });

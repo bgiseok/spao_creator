@@ -15,6 +15,8 @@ export const products = pgTable("products", {
     supporterId: integer("supporter_id").references(() => supporters.id).notNull(),
     name: text("name").notNull(),
     price: text("price").notNull(),
+    originalPrice: text("original_price"),
+    discountRate: integer("discount_rate"),
     imageUrl: text("image_url").notNull(),
     linkUrl: text("link_url").notNull(),
     createdAt: timestamp("created_at").defaultNow(),

@@ -4,6 +4,8 @@ import * as cheerio from 'cheerio';
 export interface SpaoProduct {
   name: string;
   price: string;
+  originalPrice?: string;
+  discountRate?: number;
   imageUrl: string;
   url: string;
 }
@@ -36,6 +38,15 @@ export async function scrapeSpaoProduct(input: string): Promise<SpaoProduct[]> {
         $('.price_num').first().text().trim() ||
         $('.custom_price').first().text().trim();
 
+      const originalPriceRaw = $('.custom.through').first().text().trim() ||
+        $('.detail_price').first().text().trim() || '';
+
+      const saleText = $('.sale_text').first().text().trim(); // e.g. "22%"
+      let discountRate: number | undefined = undefined;
+      if (saleText.includes('%')) {
+        discountRate = parseInt(saleText.replace(/[^0-9]/g, ''));
+      }
+
       let imageUrl = $('.keyImg img').attr('src') ||
         $('.key_img img').attr('src') ||
         $('meta[property="og:image"]').attr('content') || '';
@@ -47,6 +58,8 @@ export async function scrapeSpaoProduct(input: string): Promise<SpaoProduct[]> {
       return [{
         name: productName,
         price: cleanPrice(priceRaw),
+        originalPrice: originalPriceRaw ? cleanPrice(originalPriceRaw) : undefined,
+        discountRate,
         imageUrl,
         url: input
       }];
@@ -65,11 +78,17 @@ export async function scrapeSpaoProduct(input: string): Promise<SpaoProduct[]> {
 
       const results: SpaoProduct[] = [];
 
-      // Select loop based on list found in browser analysis
       $('ul.prdList.grid2 li').each((_, el) => {
         const item = $(el);
         const name = item.find('.name').text().trim();
         const price = item.find('.price').text().trim() || item.find('[class*="price"]').last().text().trim();
+
+        const originalPriceRaw = item.find('.custom.through').text().trim() || item.find('li[rel="소비자가"] span').text().trim();
+        const saleText = item.find('.sale_text').text().trim();
+        let discountRate: number | undefined = undefined;
+        if (saleText.includes('%')) {
+          discountRate = parseInt(saleText.replace(/[^0-9]/g, ''));
+        }
 
         // Handle Lazy Loading: Check ec-data-src first, then data-src, then src
         const imgEl = item.find('img');
@@ -83,6 +102,8 @@ export async function scrapeSpaoProduct(input: string): Promise<SpaoProduct[]> {
           results.push({
             name,
             price: cleanPrice(price),
+            originalPrice: originalPriceRaw ? cleanPrice(originalPriceRaw) : undefined,
+            discountRate,
             imageUrl: image,
             url: link
           });
