@@ -597,7 +597,7 @@ export default function AdminPage() {
                     <div className="w-full flex items-center justify-between bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100">
                         <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                            <span className="text-base font-bold text-gray-700 [word-break:keep-all]">{supporter.name}님, 오늘 하루도 힘내세요! : )</span>
+                            <span className="text-base font-bold text-gray-700 [word-break:keep-all]">{supporter.name}님, 환영합니다!</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -720,7 +720,7 @@ export default function AdminPage() {
                             </h2>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <div className="flex items-center gap-4 w-full sm:w-auto justify-start sm:justify-end px-1">
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
