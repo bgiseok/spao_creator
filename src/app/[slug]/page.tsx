@@ -3,6 +3,35 @@ import { ExternalLink, ShoppingBag } from 'lucide-react';
 import { getProductsBySupporterSlug, getSupporterBySlug } from '@/db/queries';
 import { notFound } from 'next/navigation';
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const supporter = await getSupporterBySlug(slug);
+
+    if (!supporter) {
+        return {
+            title: 'SPAO Creator',
+            description: '스파오 크리에이터 페이지입니다.'
+        };
+    }
+
+    return {
+        title: `${supporter.name}님의 스파오 카탈로그`,
+        description: supporter.description || '스파오의 힙한 아이템을 소개합니다 ✨',
+        openGraph: {
+            title: `${supporter.name}님의 스파오 카탈로그`,
+            description: supporter.description || '스파오의 힙한 아이템을 소개합니다 ✨',
+            images: [
+                {
+                    url: supporter.profileImage || `https://api.dicebear.com/7.x/notionists/svg?seed=${supporter.name}`,
+                    width: 800,
+                    height: 800,
+                    alt: `${supporter.name}님의 프로필`,
+                },
+            ],
+        },
+    };
+}
+
 export default async function LinkTreePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
 
