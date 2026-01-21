@@ -168,6 +168,21 @@ export default function AdminPage() {
         });
     };
 
+    // Helper to generate UTM URL
+    const generateUtmUrl = (url: string, slug: string, name: string) => {
+        try {
+            const urlObj = new URL(url);
+            urlObj.searchParams.set('utm_source', 'instagram');
+            urlObj.searchParams.set('utm_medium', 'creator');
+            urlObj.searchParams.set('utm_campaign', slug);
+            urlObj.searchParams.set('utm_term', name);
+            return urlObj.toString();
+        } catch (e) {
+            console.error('Invalid URL:', url);
+            return url; // Fallback to original if invalid
+        }
+    }
+
     // Save Function
     const handleSave = async () => {
         if (selectedProducts.length === 0 || !supporter) return;
@@ -182,7 +197,8 @@ export default function AdminPage() {
                         name: product.name,
                         price: product.price,
                         imageUrl: product.imageUrl,
-                        linkUrl: product.url
+                        // Generate UTM URL here
+                        linkUrl: generateUtmUrl(product.url, supporter.slug, product.name)
                     }),
                 }).then(res => res.json())
             );
