@@ -670,9 +670,6 @@ export default function AdminPage() {
                                 >
                                     <Plus className="w-4 h-4" />
                                 </button>
-                                <a href="/insights" target="_blank" className="ml-2 text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-md hover:bg-purple-100">
-                                    📊 인사이트
-                                </a>
                             </div>
                         </div>
 
