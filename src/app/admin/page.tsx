@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink, ChevronDown, FolderInput } from 'lucide-react';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink, ChevronDown, FolderInput, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -69,6 +69,26 @@ export default function AdminPage() {
     // Move Product State
     const [movingProduct, setMovingProduct] = useState<Product | null>(null);
     const [moveTargetId, setMoveTargetId] = useState<number | null>(null);
+
+    // Reorder Function
+    const handleReorder = async (newOrder: Product[]) => {
+        setSavedProducts(newOrder); // Optimistic UI update
+
+        const updates = newOrder.map((item, index) => ({
+            id: item.id,
+            sortOrder: index + 1 // 1-based order
+        }));
+
+        try {
+            await fetch('/api/products/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: updates })
+            });
+        } catch (e) {
+            console.error("Reorder failed", e);
+        }
+    };
 
     // Move Product Function
     const handleMoveProduct = async () => {
@@ -571,7 +591,7 @@ export default function AdminPage() {
             </AnimatePresence>
 
 
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-2xl mt-12 mb-20 px-4 flex flex-col items-center">
                 <header className="mb-10 flex flex-col items-center relative gap-3">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">스파오 크리에이터 카탈로그</h1>
                     <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-full shadow-sm border border-gray-100">
@@ -583,66 +603,23 @@ export default function AdminPage() {
                         {/* Settings Button */}
                         <button
                             onClick={() => setIsEditingProfile(true)}
-                            className="text-gray-400 hover:text-black p-1 hover:bg-gray-100 rounded-full transition-all"
+                            className="text-gray-400 hover:text-black p-2 hover:bg-gray-100 rounded-full transition-all flex items-center justify-center"
                             title="프로필 수정"
                         >
-                            <Settings className="w-4 h-4" />
+                            <Settings className="w-5 h-5" />
                         </button>
 
                         <button
                             onClick={handleLogout}
-                            className="text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full transition-all"
+                            className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all flex items-center justify-center"
                             title="로그아웃"
                         >
-                            <LogOut className="w-4 h-4" />
+                            <LogOut className="w-5 h-5" />
                         </button>
                     </div>
 
                 </header>
 
-    // Move Product State
-                const [movingProduct, setMovingProduct] = useState<Product | null>(null);
-                const [moveTargetId, setMoveTargetId] = useState<number | null>(null);
-
-    // ... (existing code)
-
-    // Move Product Function
-    const handleMoveProduct = async () => {
-        if (!movingProduct || !moveTargetId) return;
-                try {
-            const res = await fetch('/api/products/move', {
-                    method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({productId: movingProduct.id, catalogId: moveTargetId })
-            });
-                if (res.ok) {
-                // Remove from current view if it's different from current catalog
-                // (Unless we are viewing "All" - which we don't really support yet explicitly)
-                // For now, simple logic: remove from local list to reflect "moved away"
-                // OR re-fetch. Re-fetching is safer.
-                // But to be snappy:
-                if (currentCatalogId && moveTargetId !== currentCatalogId) {
-                    setSavedProducts(savedProducts.filter(p => p.id !== movingProduct.id));
-                }
-                setMovingProduct(null);
-                setMoveTargetId(null);
-                alert('이동되었습니다.');
-            } else {
-                    alert('이동 실패');
-            }
-        } catch(e) {
-                    alert('오류 발생');
-        }
-    }
-
-
-                // Login Function ... (no change needed here)
-                // Logout ...
-
-                // ...
-
-                return (
-                // ...
                 {/* Search Section */}
                 <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 sticky top-4 z-10">
                     {/* Catalog Selector for Adding */}
@@ -889,7 +866,7 @@ export default function AdminPage() {
                                             <button
                                                 onClick={handleCreateCatalog}
                                                 disabled={isCreatingCatalog || !newCatalogTitle.trim()}
-                                                className="bg-black text-white rounded-xl px-4 font-bold disabled:opacity-50"
+                                                className="bg-black text-white rounded-xl px-5 py-2 font-bold disabled:opacity-50 whitespace-nowrap"
                                             >
                                                 추가
                                             </button>
@@ -922,28 +899,6 @@ export default function AdminPage() {
                             </div>
                         )}
                     </AnimatePresence>
-                    {/* Reorder Function */}
-                    const handleReorder = async (newOrder: Product[]) => {
-                        setSavedProducts(newOrder); // Optimistic UI update
-
-                        // Debounce or just fire? Fire for now.
-                        const updates = newOrder.map((item, index) => ({
-                        id: item.id,
-                    sortOrder: index + 1 // 1-based order
-                        }));
-
-                    try {
-                        await fetch('/api/products/reorder', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ items: updates })
-                        });
-                        } catch(e) {
-                        console.error("Reorder failed", e);
-                            // Revert? (Complex for MVP, skip for now)
-                        }
-                    };
-
                     <Reorder.Group axis="y" values={savedProducts} onReorder={handleReorder} className="space-y-3">
                         {savedProducts.map((item) => (
                             <Reorder.Item key={item.id} value={item} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-shadow relative">
@@ -952,7 +907,7 @@ export default function AdminPage() {
                                 </div>
                                 <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100 select-none pointer-events-none" />
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-all">{item.name}</h3>
+                                    <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-keep">{item.name}</h3>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         {item.discountRate && (
                                             <span className="text-red-600 font-bold text-xs">{item.discountRate}%</span>
