@@ -3,11 +3,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Loader2, Check, User, LogOut, Settings, X } from 'lucide-react';
+import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 interface Product {
+    id: number;
     name: string;
     price: string;
     imageUrl: string;
@@ -45,6 +46,10 @@ export default function AdminPage() {
     const [savedProducts, setSavedProducts] = useState<Product[]>([]);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Deleting State
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+
+
     const router = useRouter();
 
 
@@ -66,7 +71,6 @@ export default function AdminPage() {
                 setSupporter(data.supporter);
                 setSavedProducts(data.products || []);
 
-                // Init edit state
                 setEditDescription(data.supporter.description || '');
                 setEditProfileImage(data.supporter.profileImage || '');
 
@@ -90,6 +94,22 @@ export default function AdminPage() {
         setKeyword('');
         localStorage.removeItem('spao_supporter_slug');
     }
+
+    // Image Upload Handler
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 1024 * 1024) { // 1MB limit
+                alert("이미지 크기는 1MB 이하여야 합니다.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEditProfileImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     // Update Profile Function
     const handleUpdateProfile = async () => {
@@ -119,6 +139,29 @@ export default function AdminPage() {
         }
         setIsUpdatingProfile(false);
     };
+
+    // Product Delete Function
+    const handleDeleteProduct = async (productId: number) => {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        setDeletingId(productId);
+        try {
+            const res = await fetch('/api/products/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: productId }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSavedProducts(savedProducts.filter(p => p.id !== productId));
+            } else {
+                alert('삭제에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다.');
+        }
+        setDeletingId(null);
+    }
 
     // Check for existing session
     useEffect(() => {
@@ -179,7 +222,7 @@ export default function AdminPage() {
             return urlObj.toString();
         } catch (e) {
             console.error('Invalid URL:', url);
-            return url; // Fallback to original if invalid
+            return url;
         }
     }
 
@@ -197,7 +240,6 @@ export default function AdminPage() {
                         name: product.name,
                         price: product.price,
                         imageUrl: product.imageUrl,
-                        // Generate UTM URL here
                         linkUrl: generateUtmUrl(product.url, supporter.slug, product.name)
                     }),
                 }).then(res => res.json())
@@ -304,16 +346,32 @@ export default function AdminPage() {
                                         onChange={(e) => setEditDescription(e.target.value)}
                                     />
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">프로필 이미지 URL</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="이미지 주소를 입력하세요 (선택 사항)"
-                                        value={editProfileImage}
-                                        onChange={(e) => setEditProfileImage(e.target.value)}
-                                    />
-                                    <p className="text-xs text-gray-400 mt-1">인스타그램 프로필 사진 주소 등을 복사해오세요.</p>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">프로필 이미지</label>
+
+                                    {editProfileImage && (
+                                        <div className="mb-3 flex justify-center">
+                                            <img src={editProfileImage} alt="Profile Preview" className="w-20 h-20 rounded-full object-cover border border-gray-200 shadow-sm" />
+                                        </div>
+                                    )}
+
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                            id="profile-upload"
+                                        />
+                                        <label
+                                            htmlFor="profile-upload"
+                                            className="w-full bg-gray-50 border border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-all text-gray-500 hover:text-blue-500"
+                                        >
+                                            <Upload className="w-6 h-6 mb-1" />
+                                            <span className="text-sm font-medium">이미지 파일 선택 (1MB 이하)</span>
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <button
@@ -447,6 +505,13 @@ export default function AdminPage() {
                                     <h3 className="font-bold text-gray-900 truncate">{item.name}</h3>
                                     <p className="text-gray-500 text-sm mt-0.5">{item.price}</p>
                                 </div>
+                                <button
+                                    onClick={() => handleDeleteProduct(item.id)}
+                                    disabled={deletingId === item.id}
+                                    className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all"
+                                >
+                                    {deletingId === item.id ? <Loader2 className="animate-spin w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
+                                </button>
                             </div>
                         ))}
                         {savedProducts.length === 0 && searchResults.length === 0 && (

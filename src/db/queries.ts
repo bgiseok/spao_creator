@@ -41,7 +41,11 @@ export async function updateSupporter(id: number, data: { description?: string; 
 }
 
 export async function getProductsBySupporterId(supporterId: number) {
-  return await db.select().from(products).where(eq(products.supporterId, supporterId));
+  return await db.select().from(products).where(eq(products.supporterId, supporterId)).orderBy(products.createdAt);
+}
+
+export async function deleteProduct(id: number) {
+  return await db.delete(products).where(eq(products.id, id)).returning();
 }
 
 export async function getProductsBySupporterSlug(supporterSlug: string) {
