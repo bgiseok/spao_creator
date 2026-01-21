@@ -623,33 +623,6 @@ export default function AdminPage() {
 
                 {/* Search Section */}
                 <div className="w-full bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 sticky top-4 z-10">
-                    {/* Catalog Selector for Adding */}
-                    <div className="mb-3 flex items-center justify-between">
-                        <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
-                            <Plus className="w-3 h-3" />
-                            상품 추가 대상:
-                            <span className="text-blue-600 font-bold ml-1">
-                                {catalogs.find(c => c.id === currentCatalogId)?.title || "카탈로그 없음 (기본)"}
-                            </span>
-                        </label>
-                        {/* Optional: Allow changing catalog here too. 
-                             For simplicity, we refrain from duplicating the full dropdown to avoid complex sync issues 
-                             unless user explicitly requested "option when adding". 
-                             The user said "option ... when adding". 
-                             So let's add a small quick switcher here or just reference the main one?
-                             Reference is safer UI-wise "Please select catalog below", 
-                             BUT user wants to choose. 
-                             Let's simple dropdown here.
-                         */}
-                        <select
-                            className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-gray-50 font-medium cursor-pointer"
-                            value={currentCatalogId || ''}
-                            onChange={(e) => setCurrentCatalogId(Number(e.target.value))}
-                        >
-                            {catalogs.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-                            {catalogs.length === 0 && <option value="">기본</option>}
-                        </select>
-                    </div>
 
                     <div className="flex flex-col sm:flex-row gap-2">
                         {/* ... Input ... */}
@@ -745,79 +718,6 @@ export default function AdminPage() {
                                 등록된 상품 관리
                                 <span className="text-gray-400 font-normal">({savedProducts.length})</span>
                             </h2>
-                            <div className="mt-2 flex items-center gap-2">
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowCatalogDropdown(!showCatalogDropdown)}
-                                        className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold text-gray-700 min-w-[160px] flex items-center justify-between gap-2 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                                    >
-                                        <div className="flex flex-col items-start">
-                                            <span className="text-[10px] text-gray-400 font-medium">카탈로그 선택</span>
-                                            <span className="line-clamp-1 text-left flex items-center gap-2">
-                                                {catalogs.find(c => c.id === currentCatalogId)?.title || "카탈로그 없음 (기본)"}
-                                                {catalogs.find(c => c.id === currentCatalogId)?.id === activeCatalogId && (
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" title="현재 노출중" />
-                                                )}
-                                            </span>
-                                        </div>
-                                        <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", showCatalogDropdown && "rotate-180")} />
-                                    </button>
-
-                                    <AnimatePresence>
-                                        {showCatalogDropdown && (
-                                            <>
-                                                <div
-                                                    className="fixed inset-0 z-30"
-                                                    onClick={() => setShowCatalogDropdown(false)}
-                                                />
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                    transition={{ duration: 0.1 }}
-                                                    className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-40 overflow-hidden"
-                                                >
-                                                    <div className="p-1.5 space-y-0.5">
-                                                        {catalogs.length === 0 && (
-                                                            <div className="px-3 py-2 text-sm text-gray-400 text-center">생성된 카탈로그가 없습니다</div>
-                                                        )}
-                                                        {catalogs.map(c => (
-                                                            <button
-                                                                key={c.id}
-                                                                onClick={() => {
-                                                                    setCurrentCatalogId(c.id);
-                                                                    setShowCatalogDropdown(false);
-                                                                }}
-                                                                className={cn(
-                                                                    "w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between group",
-                                                                    currentCatalogId === c.id
-                                                                        ? "bg-blue-50 text-blue-700"
-                                                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                                                )}
-                                                            >
-                                                                <span>{c.title}</span>
-                                                                {c.isActive && (
-                                                                    <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">
-                                                                        노출중
-                                                                    </span>
-                                                                )}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
-                                            </>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                <button
-                                    onClick={() => setShowCatalogModal(true)}
-                                    className="bg-gray-900 text-white p-2 rounded-xl hover:bg-gray-700 transition-colors shadow-sm active:scale-95"
-                                    title="카탈로그 관리/추가"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                </button>
-                            </div>
                         </div>
 
                         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
@@ -917,16 +817,6 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                                 <div className="flex gap-1.5 ml-2">
-                                    <button
-                                        onClick={() => {
-                                            setMovingProduct(item);
-                                            setMoveTargetId(currentCatalogId);
-                                        }}
-                                        className="text-gray-400 hover:text-blue-500 p-2 hover:bg-blue-50 rounded-full transition-all"
-                                        title="다른 카탈로그로 이동"
-                                    >
-                                        <FolderInput className="w-5 h-5" />
-                                    </button>
                                     <button
                                         onClick={() => handleDeleteProduct(item.id)}
                                         disabled={deletingId === item.id}
