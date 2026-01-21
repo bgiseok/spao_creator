@@ -455,27 +455,6 @@ export default function AdminPage() {
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-2 mt-2">
-                        <a
-                            href={`/${supporter.slug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors bg-gray-100 px-4 py-2 rounded-full hover:bg-blue-50"
-                        >
-                            내 링크트리 보기
-                            <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
-                                alert("링크가 복사되었습니다!");
-                            }}
-                            className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200"
-                        >
-                            링크 복사
-                            <Copy className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
                 </header>
 
                 {/* Search Section */}
@@ -569,9 +548,21 @@ export default function AdminPage() {
                 <div>
                     <div className="flex justify-between items-end mb-4 px-1">
                         <h2 className="text-xl font-bold text-gray-900">등록된 리스트 <span className="text-gray-400 font-normal">({savedProducts.length})</span></h2>
-                        <a href={`/${supporter.slug}`} target="_blank" className="text-sm font-bold text-blue-600 hover:underline">
-                            내 링크트리 보기 →
-                        </a>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
+                                    alert("링크가 복사되었습니다!");
+                                }}
+                                className="flex items-center gap-1.5 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors"
+                            >
+                                <Copy className="w-3.5 h-3.5" />
+                                링크 복사
+                            </button>
+                            <a href={`/${supporter.slug}`} target="_blank" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                내 링크트리 보기 →
+                            </a>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-3">
