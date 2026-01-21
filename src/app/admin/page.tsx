@@ -162,9 +162,24 @@ export default function AdminPage() {
             });
             const data = await res.json();
             if (data.catalog) {
-                setCatalogs([data.catalog, ...catalogs]);
-                setCurrentCatalogId(data.catalog.id); // Switch to new one
-                if (catalogs.length === 0) setActiveCatalogId(data.catalog.id); // If first, make active 
+                // Determine if it should be active (if it's the first one)
+                const isFirst = catalogs.length === 0;
+                let newCatalog = data.catalog;
+
+                if (isFirst) {
+                    // Auto-activate
+                    await fetch('/api/catalogs/active', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ supporterId: supporter.id, catalogId: newCatalog.id })
+                    });
+                    newCatalog = { ...newCatalog, isActive: true };
+                    setActiveCatalogId(newCatalog.id);
+                }
+
+                setCatalogs([newCatalog, ...catalogs]);
+                setCurrentCatalogId(newCatalog.id);
+
                 setNewCatalogTitle('');
                 setShowCatalogModal(false);
                 alert('카탈로그가 생성되었습니다.');
@@ -660,8 +675,11 @@ export default function AdminPage() {
                                     >
                                         <div className="flex flex-col items-start">
                                             <span className="text-[10px] text-gray-400 font-medium">카탈로그 선택</span>
-                                            <span className="line-clamp-1 text-left">
+                                            <span className="line-clamp-1 text-left flex items-center gap-2">
                                                 {catalogs.find(c => c.id === currentCatalogId)?.title || "카탈로그 없음 (기본)"}
+                                                {catalogs.find(c => c.id === currentCatalogId)?.id === activeCatalogId && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" title="현재 노출중" />
+                                                )}
                                             </span>
                                         </div>
                                         <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", showCatalogDropdown && "rotate-180")} />
