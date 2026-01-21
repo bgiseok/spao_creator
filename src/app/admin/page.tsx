@@ -297,7 +297,7 @@ export default function AdminPage() {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
                 <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-gray-100 text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">SPAO Creator</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">스파오 크리에이터 1기</h1>
                     <p className="text-gray-500 mb-8">인스타그램 아이디를 활용해주세요</p>
 
                     <form onSubmit={handleLogin} className="space-y-4">
