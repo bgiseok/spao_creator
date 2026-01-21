@@ -306,7 +306,7 @@ export default function AdminPage() {
                             <input
                                 type="text"
                                 placeholder="예: jisoo, minji"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg placeholder-gray-500"
                                 value={loginSlug}
                                 onChange={(e) => setLoginSlug(e.target.value)}
                             />
@@ -317,7 +317,7 @@ export default function AdminPage() {
                             <input
                                 type="password"
                                 placeholder="공통 코드 (Quiz 정답)"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder-gray-500"
                                 value={loginPasscode}
                                 onChange={(e) => setLoginPasscode(e.target.value)}
                             />
