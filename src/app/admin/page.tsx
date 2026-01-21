@@ -30,6 +30,9 @@ export default function AdminPage() {
     const [loginPasscode, setLoginPasscode] = useState('');
     const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+    // New User State
+    const [isNewUser, setIsNewUser] = useState(false);
+
     // Profile Edit State
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [editDescription, setEditDescription] = useState('');
@@ -75,6 +78,13 @@ export default function AdminPage() {
                 setEditProfileImage(data.supporter.profileImage || '');
 
                 localStorage.setItem('spao_supporter_slug', data.supporter.slug);
+
+                // Handle New User Onboarding
+                if (data.isNew) {
+                    setIsNewUser(true);
+                    setIsEditingProfile(true);
+                }
+
             } else {
                 alert('로그인/생성에 실패했습니다.');
             }
@@ -92,6 +102,7 @@ export default function AdminPage() {
         setSavedProducts([]);
         setSearchResults([]);
         setKeyword('');
+        setIsNewUser(false);
         localStorage.removeItem('spao_supporter_slug');
     }
 
@@ -114,6 +125,13 @@ export default function AdminPage() {
     // Update Profile Function
     const handleUpdateProfile = async () => {
         if (!supporter) return;
+
+        // Validation for New User
+        if (isNewUser && !editDescription.trim()) {
+            alert("소개글은 필수 입력 항목입니다.");
+            return;
+        }
+
         setIsUpdatingProfile(true);
         try {
             const res = await fetch('/api/supporters/update', {
@@ -129,7 +147,12 @@ export default function AdminPage() {
             if (data.supporter) {
                 setSupporter(data.supporter);
                 setIsEditingProfile(false);
-                alert('프로필이 수정되었습니다.');
+                if (isNewUser) {
+                    setIsNewUser(false); // Graduation!
+                    alert('프로필 설정이 완료되었습니다! 환영합니다.');
+                } else {
+                    alert('프로필이 수정되었습니다.');
+                }
             } else {
                 alert('수정에 실패했습니다.');
             }
@@ -327,28 +350,41 @@ export default function AdminPage() {
                             exit={{ scale: 0.9, opacity: 0 }}
                             className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
                         >
-                            <button
-                                onClick={() => setIsEditingProfile(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-black"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
+                            {/* Hide Close Button for New Users */}
+                            {!isNewUser && (
+                                <button
+                                    onClick={() => setIsEditingProfile(false)}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-black"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            )}
 
-                            <h2 className="text-xl font-bold mb-4">프로필 수정</h2>
+                            <h2 className="text-xl font-bold mb-4">
+                                {isNewUser ? "✨ 환영합니다! 프로필을 설정해주세요" : "프로필 수정"}
+                            </h2>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">소개글</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                                        소개글 {isNewUser && <span className="text-red-500">*</span>}
+                                    </label>
                                     <textarea
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                                        placeholder="서포터즈 소개글을 입력하세요."
+                                        className={cn(
+                                            "w-full bg-gray-50 border rounded-xl p-3 focus:outline-none focus:ring-2 min-h-[100px]",
+                                            isNewUser && !editDescription.trim() ? "border-red-300 focus:ring-red-200" : "border-gray-200 focus:ring-blue-500"
+                                        )}
+                                        placeholder="서포터즈 소개글을 입력하세요. (필수)"
                                         value={editDescription}
                                         onChange={(e) => setEditDescription(e.target.value)}
                                     />
+                                    {isNewUser && !editDescription.trim() && (
+                                        <p className="text-xs text-red-500 mt-1">소개글을 입력해야 시작할 수 있습니다.</p>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">프로필 이미지</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">프로필 이미지 (선택)</label>
 
                                     {editProfileImage && (
                                         <div className="mb-3 flex justify-center">
@@ -376,10 +412,10 @@ export default function AdminPage() {
 
                                 <button
                                     onClick={handleUpdateProfile}
-                                    disabled={isUpdatingProfile}
+                                    disabled={isUpdatingProfile || (isNewUser && !editDescription.trim())}
                                     className="w-full bg-black text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
                                 >
-                                    {isUpdatingProfile ? <Loader2 className="animate-spin" /> : "저장하기"}
+                                    {isUpdatingProfile ? <Loader2 className="animate-spin" /> : (isNewUser ? "설정 완료하고 시작하기" : "저장하기")}
                                 </button>
                             </div>
                         </motion.div>

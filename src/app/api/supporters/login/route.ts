@@ -17,15 +17,17 @@ export async function POST(request: Request) {
         }
 
         let supporter = await getSupporterBySlug(slug);
+        let isNew = false;
 
         if (!supporter) {
             const newSupporter = await createSupporter(slug, name || slug);
             supporter = newSupporter[0];
+            isNew = true;
         }
 
         const products = await getProductsBySupporterId(supporter.id);
 
-        return NextResponse.json({ supporter, products });
+        return NextResponse.json({ supporter, products, isNew });
 
     } catch (error) {
         console.error('Login Error:', error);
