@@ -454,7 +454,7 @@ export default function AdminPage() {
                     <div className="flex flex-col sm:flex-row gap-2">
                         <input
                             type="text"
-                            placeholder="예: 데님 재킷, 슬랙스 (URL도 가능)"
+                            placeholder="예: 푸퍼, 데일리지, 가디건 등"
                             className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-700 placeholder-gray-400 text-base"
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
