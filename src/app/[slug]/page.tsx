@@ -31,42 +31,58 @@ export default async function LinkTreePage({ params }: { params: Promise<{ slug:
             {/* Product Grid */}
             <div className="max-w-md mx-auto px-4 py-8">
                 <div className="grid grid-cols-2 gap-4">
-                    {products.map((product, idx) => (
-                        <a
-                            key={idx}
-                            href={product.linkUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="group block"
-                        >
-                            <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] mb-3 relative">
-                                {/* Placeholder mostly, if real image is broken */}
-                                <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
-                                    <ShoppingBag className="w-8 h-8 opacity-20" />
-                                </div>
-                                {/* In real usage, ensure image url is valid */}
-                                <img
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
-                                <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-white px-2.5 py-1.5 rounded-xl flex flex-col items-end">
-                                    {product.originalPrice && (
-                                        <span className="text-[10px] text-gray-400 line-through decoration-gray-400 mb-px">{product.originalPrice}</span>
-                                    )}
-                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm">
-                                        {product.discountRate && (
-                                            <span className="text-red-400 font-extrabold">{product.discountRate}%</span>
+                    {products.map((product, idx) => {
+                        // Helper to calculate discount if missing
+                        let displayDiscount = product.discountRate;
+                        if (!displayDiscount && product.originalPrice && product.price) {
+                            try {
+                                const original = parseInt(product.originalPrice.replace(/[^0-9]/g, ''));
+                                const current = parseInt(product.price.replace(/[^0-9]/g, ''));
+                                if (original > current && original > 0) {
+                                    displayDiscount = Math.round(((original - current) / original) * 100);
+                                }
+                            } catch (e) {
+                                // Ignore calculation errors
+                            }
+                        }
+
+                        return (
+                            <a
+                                key={idx}
+                                href={product.linkUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group block"
+                            >
+                                <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] mb-3 relative">
+                                    {/* Placeholder mostly, if real image is broken */}
+                                    <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
+                                        <ShoppingBag className="w-8 h-8 opacity-20" />
+                                    </div>
+                                    {/* In real usage, ensure image url is valid */}
+                                    <img
+                                        src={product.imageUrl}
+                                        alt={product.name}
+                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-white px-2.5 py-1.5 rounded-xl flex flex-col items-end">
+                                        {product.originalPrice && (
+                                            <span className="text-[10px] text-gray-400 line-through decoration-gray-400 mb-px">{product.originalPrice}</span>
                                         )}
-                                        <span className="font-bold">{product.price}</span>
+                                        <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+                                            {displayDiscount && displayDiscount > 0 && (
+                                                <span className="text-red-400 font-extrabold">{displayDiscount}%</span>
+                                            )}
+                                            <span className="font-bold">{product.price}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
-                                {product.name}
-                            </h3>
-                        </a>
-                    ))}
+                                <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                    {product.name}
+                                </h3>
+                            </a>
+                        );
+                    })}
 
                     {products.length === 0 && (
                         <div className="col-span-2 text-center py-20 text-gray-400">
