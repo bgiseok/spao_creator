@@ -546,7 +546,7 @@ export default function AdminPage() {
                                                 )}
                                             </div>
                                             <div className="p-3">
-                                                <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-snug break-keep">{item.name}</h3>
+                                                <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-snug break-all">{item.name}</h3>
                                                 <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                                     {item.discountRate && (
                                                         <span className="text-red-600 font-bold text-sm">{item.discountRate}%</span>
@@ -579,7 +579,7 @@ export default function AdminPage() {
                             <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all">
                                 <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100" />
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 truncate [word-break:keep-all] whitespace-normal line-clamp-2">{item.name}</h3>
+                                    <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-all">{item.name}</h3>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         {item.discountRate && (
                                             <span className="text-red-600 font-bold text-xs">{item.discountRate}%</span>

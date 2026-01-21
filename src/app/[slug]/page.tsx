@@ -72,7 +72,7 @@ export default async function LinkTreePage({ params }: { params: Promise<{ slug:
                                         <span className="font-bold text-sm">{product.price}</span>
                                     </div>
                                 </div>
-                                <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors break-all">
                                     {product.name}
                                 </h3>
                             </a>
