@@ -98,7 +98,7 @@ export async function scrapeSpaoProduct(input: string): Promise<SpaoProduct[]> {
         if (image && image.startsWith('//')) image = 'https:' + image;
         if (link && !link.startsWith('http')) link = 'https://m.spao.com' + link;
 
-        if (name && link) {
+        if (name && link && !name.includes('키즈')) { // Filter out "Kids" products
           results.push({
             name,
             price: cleanPrice(price),
