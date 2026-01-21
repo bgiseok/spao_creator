@@ -47,7 +47,7 @@ export default function AdminPage() {
     const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
 
     const [savedProducts, setSavedProducts] = useState<Product[]>([]);
-    const [isSaving, setIsSaving] = useState(false);
+    const [isSaving, setIsSaving] = useState(false)
 
     // Deleting State
     const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -338,7 +338,7 @@ export default function AdminPage() {
 
     // RENDER: Main Dashboard
     return (
-        <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+        <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex flex-col items-center">
 
             {/* Edit Profile Modal */}
             <AnimatePresence>
@@ -429,7 +429,7 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">SPAO Creator Studio</h1>
                     <div className="mt-2 flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span className="text-sm font-bold text-gray-700">Hi, {supporter.name} ({supporter.slug})</span>
+                        <span className="text-sm font-bold text-gray-700 [word-break:keep-all]">Hi, {supporter.name} ({supporter.slug})</span>
 
                         {/* Settings Button */}
                         <button
@@ -451,7 +451,7 @@ export default function AdminPage() {
                         <input
                             type="text"
                             placeholder="예: 데님 재킷, 슬랙스 (URL도 가능)"
-                            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-700 placeholder-gray-400"
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-700 placeholder-gray-400 text-base"
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -538,7 +538,7 @@ export default function AdminPage() {
                             <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all">
                                 <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100" />
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 truncate">{item.name}</h3>
+                                    <h3 className="font-bold text-gray-900 truncate [word-break:keep-all] whitespace-normal line-clamp-2">{item.name}</h3>
                                     <p className="text-gray-500 text-sm mt-0.5">{item.price}</p>
                                 </div>
                                 <button

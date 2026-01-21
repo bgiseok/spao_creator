@@ -24,8 +24,8 @@ export default async function LinkTreePage({ params }: { params: Promise<{ slug:
                         className="w-full h-full object-cover"
                     />
                 </div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-1">@{supporter.name}</h1>
-                <p className="text-gray-500 text-sm font-medium">{supporter.description || "스파오의 힙한 아이템을 소개합니다 ✨"}</p>
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight mb-1 [word-break:keep-all]">@{supporter.name}</h1>
+                <p className="text-gray-500 text-sm font-medium [word-break:keep-all] px-4">{supporter.description || "스파오의 힙한 아이템을 소개합니다 ✨"}</p>
             </div>
 
             {/* Product Grid */}
