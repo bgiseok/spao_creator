@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${supporter.name}님의 스파오 카탈로그`,
+        title: `스파오 크리에이터 ${supporter.name}님이 말아주는 아이템`,
         description: supporter.description || '스파오의 힙한 아이템을 소개합니다 ✨',
         openGraph: {
-            title: `${supporter.name}님의 스파오 카탈로그`,
+            title: `스파오 크리에이터 ${supporter.name}님이 말아주는 아이템`,
             description: supporter.description || '스파오의 힙한 아이템을 소개합니다 ✨',
             images: [
                 {
