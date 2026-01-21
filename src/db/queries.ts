@@ -9,20 +9,26 @@ const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql, { schema });
 
 export async function addProduct(supporterId: number, name: string, price: string, imageUrl: string, linkUrl: string) {
-    return await db.insert(products).values({
-        supporterId,
-        name,
-        price,
-        imageUrl,
-        linkUrl
-    }).returning();
+  return await db.insert(products).values({
+    supporterId,
+    name,
+    price,
+    imageUrl,
+    linkUrl
+  }).returning();
 }
 
-export async function getProducts(supporterSlug: string) {
-    // Join logic to get products by supporter slug
-    // For now simple query mock flow
-    const supporter = await db.select().from(supporters).where(eq(supporters.slug, supporterSlug)).limit(1);
-    if (!supporter || supporter.length === 0) return [];
+export async function getSupporterBySlug(slug: string) {
+  const result = await db.select().from(supporters).where(eq(supporters.slug, slug)).limit(1);
+  return result[0] || null;
+}
 
-    return await db.select().from(products).where(eq(products.supporterId, supporter[0].id));
+export async function getProductsBySupporterId(supporterId: number) {
+  return await db.select().from(products).where(eq(products.supporterId, supporterId));
+}
+
+export async function getProductsBySupporterSlug(supporterSlug: string) {
+    const supporter = await getSupporterBySlug(supporterSlug);
+    if (!supporter) return [];
+    return await getProductsBySupporterId(supporter.id);
 }
