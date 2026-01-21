@@ -306,7 +306,7 @@ export default function AdminPage() {
                             <input
                                 type="text"
                                 placeholder="예: jisoo, minji"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg text-gray-900 placeholder-gray-500"
+                                className="admin-input pl-12 font-bold text-lg"
                                 value={loginSlug}
                                 onChange={(e) => setLoginSlug(e.target.value)}
                             />
@@ -317,7 +317,7 @@ export default function AdminPage() {
                             <input
                                 type="password"
                                 placeholder="공통 코드 (Quiz 정답)"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-900 placeholder-gray-500"
+                                className="admin-input pl-12"
                                 value={loginPasscode}
                                 onChange={(e) => setLoginPasscode(e.target.value)}
                             />
@@ -326,7 +326,7 @@ export default function AdminPage() {
                         <button
                             type="submit"
                             disabled={isLoggingIn || !loginSlug || !loginPasscode}
-                            className="w-full bg-black text-white font-bold py-3.5 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                            className="admin-btn-primary"
                         >
                             {isLoggingIn ? <Loader2 className="animate-spin" /> : "시작하기"}
                         </button>
@@ -364,19 +364,19 @@ export default function AdminPage() {
                                 </button>
                             )}
 
-                            <h2 className="text-xl font-bold mb-4">
+                            <h2 className="admin-title">
                                 {isNewUser ? "✨ 환영합니다! 프로필을 설정해주세요" : "프로필 수정"}
                             </h2>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                                    <label className="admin-label">
                                         소개글 {isNewUser && <span className="text-red-500">*</span>}
                                     </label>
                                     <textarea
                                         className={cn(
-                                            "w-full bg-gray-50 border rounded-xl p-3 focus:outline-none focus:ring-2 min-h-[100px]",
-                                            isNewUser && !editDescription.trim() ? "border-red-300 focus:ring-red-200" : "border-gray-200 focus:ring-blue-500"
+                                            "admin-input min-h-[100px]",
+                                            isNewUser && !editDescription.trim() && "admin-input-error"
                                         )}
                                         placeholder="서포터즈 소개글을 입력하세요. (필수)"
                                         value={editDescription}
@@ -388,7 +388,7 @@ export default function AdminPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">프로필 이미지 (선택)</label>
+                                    <label className="admin-label">프로필 이미지 (선택)</label>
 
                                     {editProfileImage && (
                                         <div className="mb-3 flex justify-center">
@@ -417,7 +417,7 @@ export default function AdminPage() {
                                 <button
                                     onClick={handleUpdateProfile}
                                     disabled={isUpdatingProfile || (isNewUser && !editDescription.trim())}
-                                    className="w-full bg-black text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                                    className="admin-btn-primary"
                                 >
                                     {isUpdatingProfile ? <Loader2 className="animate-spin" /> : (isNewUser ? "설정 완료하고 시작하기" : "저장하기")}
                                 </button>

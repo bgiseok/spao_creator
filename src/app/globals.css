@@ -27,3 +27,25 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer components {
+  .admin-input {
+    @apply w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-900 placeholder-gray-500 transition-all;
+  }
+
+  .admin-input-error {
+    @apply border-red-300 focus:ring-red-200;
+  }
+
+  .admin-label {
+    @apply block text-sm font-bold text-gray-900 mb-1;
+  }
+
+  .admin-title {
+    @apply text-xl font-bold text-gray-900 mb-4;
+  }
+
+  .admin-btn-primary {
+    @apply w-full bg-black text-white font-bold py-3.5 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2;
+  }
+}
