@@ -1,7 +1,8 @@
 
-import { ExternalLink, ShoppingBag } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { getProductsBySupporterSlug, getSupporterBySlug } from '@/db/queries';
 import { notFound } from 'next/navigation';
+import ProductLink from '@/components/ProductLink';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -76,35 +77,7 @@ export default async function LinkTreePage({ params }: { params: Promise<{ slug:
                         }
 
                         return (
-                            <a
-                                key={idx}
-                                href={product.linkUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="group block"
-                            >
-                                <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] mb-3 relative">
-                                    {/* Placeholder mostly, if real image is broken */}
-                                    <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
-                                        <ShoppingBag className="w-8 h-8 opacity-20" />
-                                    </div>
-                                    {/* In real usage, ensure image url is valid */}
-                                    <img
-                                        src={product.imageUrl}
-                                        alt={product.name}
-                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                    <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md text-white px-2.5 py-1.5 rounded-xl flex items-center gap-1.5">
-                                        {displayDiscount && displayDiscount > 0 && (
-                                            <span className="text-red-400 font-extrabold text-sm">{displayDiscount}%</span>
-                                        )}
-                                        <span className="font-bold text-sm">{product.price}</span>
-                                    </div>
-                                </div>
-                                <h3 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors break-all">
-                                    {product.name}
-                                </h3>
-                            </a>
+                            <ProductLink key={idx} product={product} displayDiscount={displayDiscount || undefined} />
                         );
                     })}
 

@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     type: "website",
   },
+  icons: {
+    icon: "https://m.spao.com/web/upload/favicon-8e008456a9de4ebcbddd9e7832b2aaeb.ico",
+  },
 };
 
 export default function RootLayout({

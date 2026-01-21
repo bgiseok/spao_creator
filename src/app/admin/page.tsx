@@ -25,6 +25,12 @@ interface Supporter {
     profileImage?: string;
 }
 
+interface Catalog {
+    id: number;
+    title: string;
+    isActive: boolean;
+}
+
 export default function AdminPage() {
     // Auth State
     const [supporter, setSupporter] = useState<Supporter | null>(null);
@@ -51,6 +57,14 @@ export default function AdminPage() {
     const [savedProducts, setSavedProducts] = useState<Product[]>([]);
     const [isSaving, setIsSaving] = useState(false)
 
+    // Catalog State
+    const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+    const [activeCatalogId, setActiveCatalogId] = useState<number | null>(null); // For "Expose"
+    const [currentCatalogId, setCurrentCatalogId] = useState<number | null>(null); // For "Editing"
+    const [newCatalogTitle, setNewCatalogTitle] = useState('');
+    const [isCreatingCatalog, setIsCreatingCatalog] = useState(false);
+    const [showCatalogModal, setShowCatalogModal] = useState(false);
+
     // Deleting State
     const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -74,12 +88,14 @@ export default function AdminPage() {
 
             if (data.supporter) {
                 setSupporter(data.supporter);
-                setSavedProducts(data.products || []);
 
                 setEditDescription(data.supporter.description || '');
                 setEditProfileImage(data.supporter.profileImage || '');
 
                 localStorage.setItem('spao_supporter_slug', data.supporter.slug);
+
+                // Initialize Catalogs
+                fetchCatalogs(data.supporter.id, data.products);
 
                 // Handle New User Onboarding
                 if (data.isNew) {
@@ -97,6 +113,88 @@ export default function AdminPage() {
         }
         setIsLoggingIn(false);
     }
+
+    const fetchCatalogs = async (supporterId: number, initialProducts?: Product[]) => {
+        try {
+            const res = await fetch(`/api/catalogs?supporterId=${supporterId}`);
+            const data = await res.json();
+            if (data.catalogs) {
+                setCatalogs(data.catalogs);
+
+                // Determine Active and Current
+                const active = data.catalogs.find((c: Catalog) => c.isActive);
+                const first = data.catalogs[0];
+
+                if (active) setActiveCatalogId(active.id);
+
+                // Default current editing to active or first.
+                // If NO catalogs exist, maybe create a default one? 
+                // Or just let user create one.
+                // If we have catalogs, set current to the first one available or active.
+                if (active) setCurrentCatalogId(active.id);
+                else if (first) setCurrentCatalogId(first.id);
+
+                // If initialProducts passed (from login), use them. 
+                // However, login endpoint returns ALL products. We might want to filter or re-fetch based on active catalog?
+                // Actually, simpler: Refetch products for the current selected catalog.
+                if (first || active) {
+                    // Logic to fetch products for specific catalog logic will be needed if we want to separate lists strictly.
+                    // For now, let's assume `data.products` from login are ALL. 
+                    // Realistically, we should re-fetch `getProducts` with `catalogId`.
+                    // But to start simple:
+                    setSavedProducts(initialProducts || []);
+                } else {
+                    setSavedProducts(initialProducts || []);
+                }
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    const handleCreateCatalog = async () => {
+        if (!supporter || !newCatalogTitle.trim()) return;
+        setIsCreatingCatalog(true);
+        try {
+            const res = await fetch('/api/catalogs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ supporterId: supporter.id, title: newCatalogTitle })
+            });
+            const data = await res.json();
+            if (data.catalog) {
+                setCatalogs([data.catalog, ...catalogs]);
+                setCurrentCatalogId(data.catalog.id); // Switch to new one
+                if (catalogs.length === 0) setActiveCatalogId(data.catalog.id); // If first, make active 
+                setNewCatalogTitle('');
+                setShowCatalogModal(false);
+                alert('카탈로그가 생성되었습니다.');
+            }
+        } catch (e) {
+            alert('생성 실패');
+        }
+        setIsCreatingCatalog(false);
+    }
+
+    // Switch Active (Exposed) Catalog
+    const handleSetActiveCatalog = async (catalogId: number) => {
+        if (!supporter) return;
+        try {
+            const res = await fetch('/api/catalogs/active', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ supporterId: supporter.id, catalogId })
+            });
+            if (res.ok) {
+                setActiveCatalogId(catalogId);
+                // Update local state to reflect change if needed
+                setCatalogs(catalogs.map(c => ({ ...c, isActive: c.id === catalogId })));
+                alert('대표 카탈로그가 변경되었습니다.');
+            }
+        } catch (e) {
+            alert('변경 실패');
+        }
+    }
+
+
 
     // Logout
     const handleLogout = () => {
@@ -262,6 +360,7 @@ export default function AdminPage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         supporterId: supporter.id,
+                        catalogId: currentCatalogId || undefined,
                         name: product.name,
                         price: product.price,
                         originalPrice: product.originalPrice,
@@ -545,10 +644,39 @@ export default function AdminPage() {
                 </AnimatePresence>
 
                 {/* Saved List Preview */}
-                <div>
-                    <div className="flex justify-between items-end mb-4 px-1">
-                        <h2 className="text-xl font-bold text-gray-900">등록된 리스트 <span className="text-gray-400 font-normal">({savedProducts.length})</span></h2>
-                        <div className="flex items-center gap-3">
+                <div id="saved-list">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 px-1 gap-4">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                등록된 상품 관리
+                                <span className="text-gray-400 font-normal">({savedProducts.length})</span>
+                            </h2>
+                            <div className="mt-2 flex items-center gap-2">
+                                <select
+                                    className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-700 min-w-[150px]"
+                                    value={currentCatalogId || ''}
+                                    onChange={(e) => setCurrentCatalogId(Number(e.target.value))}
+                                >
+                                    {catalogs.length === 0 && <option value="">카탈로그 없음 (기본)</option>}
+                                    {catalogs.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.title} {c.isActive ? '(노출중)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => setShowCatalogModal(true)}
+                                    className="bg-gray-100 p-1.5 rounded-lg text-gray-600 hover:bg-gray-200"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                                <a href="/insights" target="_blank" className="ml-2 text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-md hover:bg-purple-100">
+                                    📊 인사이트
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
@@ -564,6 +692,70 @@ export default function AdminPage() {
                             </a>
                         </div>
                     </div>
+
+                    {/* Catalog Management Modal */}
+                    <AnimatePresence>
+                        {showCatalogModal && (
+                            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative"
+                                >
+                                    <button
+                                        onClick={() => setShowCatalogModal(false)}
+                                        className="absolute top-4 right-4 text-gray-400 hover:text-black"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                    <h3 className="admin-title">카탈로그 관리</h3>
+
+                                    <div className="mb-6">
+                                        <label className="admin-label">새 카탈로그 만들기</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                className="admin-input py-2"
+                                                placeholder="예: 봄 데일리룩"
+                                                value={newCatalogTitle}
+                                                onChange={(e) => setNewCatalogTitle(e.target.value)}
+                                            />
+                                            <button
+                                                onClick={handleCreateCatalog}
+                                                disabled={isCreatingCatalog || !newCatalogTitle.trim()}
+                                                className="bg-black text-white rounded-xl px-4 font-bold disabled:opacity-50"
+                                            >
+                                                추가
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="admin-label mb-2">카탈로그 목록 (노출 설정)</label>
+                                        <ul className="space-y-2 max-h-60 overflow-y-auto">
+                                            {catalogs.map(c => (
+                                                <li key={c.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                                    <span className="font-bold text-sm text-gray-800">{c.title}</span>
+                                                    <button
+                                                        onClick={() => handleSetActiveCatalog(c.id)}
+                                                        className={cn(
+                                                            "px-3 py-1 rounded-full text-xs font-bold transition-all",
+                                                            c.isActive
+                                                                ? "bg-green-100 text-green-700"
+                                                                : "bg-gray-200 text-gray-500 hover:bg-gray-300"
+                                                        )}
+                                                    >
+                                                        {c.isActive ? '노출 중' : '노출 하기'}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                            {catalogs.length === 0 && <p className="text-gray-400 text-sm text-center py-2">생성된 카탈로그가 없습니다.</p>}
+                                        </ul>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="grid grid-cols-1 gap-3">
                         {savedProducts.map((item, idx) => (
