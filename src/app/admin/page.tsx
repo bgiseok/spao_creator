@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload } from 'lucide-react';
+import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -429,22 +429,51 @@ export default function AdminPage() {
 
 
             <div className="w-full max-w-2xl">
-                <header className="mb-8 flex flex-col items-center relative">
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">SPAO Creator Studio</h1>
-                    <div className="mt-2 flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
+                <header className="mb-10 flex flex-col items-center relative gap-3">
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight">스파오 크리에이터 카탈로그</h1>
+                    <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-full shadow-sm border border-gray-100">
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span className="text-sm font-bold text-gray-700 [word-break:keep-all]">Hi, {supporter.name} ({supporter.slug})</span>
+                        <span className="text-sm font-bold text-gray-700 [word-break:keep-all]">{supporter.name}님, 잘 부탁드립니다 : )</span>
+
+                        <div className="w-px h-3 bg-gray-200 mx-1"></div>
 
                         {/* Settings Button */}
                         <button
                             onClick={() => setIsEditingProfile(true)}
-                            className="ml-2 text-gray-400 hover:text-black p-1 hover:bg-gray-100 rounded-full transition-all"
+                            className="text-gray-400 hover:text-black p-1 hover:bg-gray-100 rounded-full transition-all"
+                            title="프로필 수정"
                         >
                             <Settings className="w-4 h-4" />
                         </button>
 
-                        <button onClick={handleLogout} className="ml-1 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full transition-all">
+                        <button
+                            onClick={handleLogout}
+                            className="text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full transition-all"
+                            title="로그아웃"
+                        >
                             <LogOut className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                        <a
+                            href={`/${supporter.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors bg-gray-100 px-4 py-2 rounded-full hover:bg-blue-50"
+                        >
+                            내 링크트리 보기
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
+                                alert("링크가 복사되었습니다!");
+                            }}
+                            className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200"
+                        >
+                            링크 복사
+                            <Copy className="w-3.5 h-3.5" />
                         </button>
                     </div>
                 </header>
