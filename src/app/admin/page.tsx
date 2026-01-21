@@ -591,7 +591,7 @@ export default function AdminPage() {
             </AnimatePresence>
 
 
-            <div className="w-full max-w-2xl mt-12 mb-20 px-4 flex flex-col items-center">
+            <div className="w-full max-w-4xl mt-12 mb-20 px-4 flex flex-col items-center">
                 <header className="mb-10 flex flex-col items-center relative gap-3">
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight">스파오 크리에이터 카탈로그</h1>
                     <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-full shadow-sm border border-gray-100">
