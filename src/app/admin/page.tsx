@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink, ChevronDown } from 'lucide-react';
+import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink, ChevronDown, FolderInput } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -65,6 +65,34 @@ export default function AdminPage() {
     const [isCreatingCatalog, setIsCreatingCatalog] = useState(false);
     const [showCatalogModal, setShowCatalogModal] = useState(false);
     const [showCatalogDropdown, setShowCatalogDropdown] = useState(false);
+
+    // Move Product State
+    const [movingProduct, setMovingProduct] = useState<Product | null>(null);
+    const [moveTargetId, setMoveTargetId] = useState<number | null>(null);
+
+    // Move Product Function
+    const handleMoveProduct = async () => {
+        if (!movingProduct || !moveTargetId) return;
+        try {
+            const res = await fetch('/api/products/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: movingProduct.id, catalogId: moveTargetId })
+            });
+            if (res.ok) {
+                if (currentCatalogId && moveTargetId !== currentCatalogId) {
+                    setSavedProducts(savedProducts.filter(p => p.id !== movingProduct.id));
+                }
+                setMovingProduct(null);
+                setMoveTargetId(null);
+                alert('이동되었습니다.');
+            } else {
+                alert('이동 실패');
+            }
+        } catch (e) {
+            alert('오류 발생');
+        }
+    }
 
     // Deleting State
     const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -572,9 +600,81 @@ export default function AdminPage() {
 
                 </header>
 
+    // Move Product State
+                const [movingProduct, setMovingProduct] = useState<Product | null>(null);
+                const [moveTargetId, setMoveTargetId] = useState<number | null>(null);
+
+    // ... (existing code)
+
+    // Move Product Function
+    const handleMoveProduct = async () => {
+        if (!movingProduct || !moveTargetId) return;
+                try {
+            const res = await fetch('/api/products/move', {
+                    method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({productId: movingProduct.id, catalogId: moveTargetId })
+            });
+                if (res.ok) {
+                // Remove from current view if it's different from current catalog
+                // (Unless we are viewing "All" - which we don't really support yet explicitly)
+                // For now, simple logic: remove from local list to reflect "moved away"
+                // OR re-fetch. Re-fetching is safer.
+                // But to be snappy:
+                if (currentCatalogId && moveTargetId !== currentCatalogId) {
+                    setSavedProducts(savedProducts.filter(p => p.id !== movingProduct.id));
+                }
+                setMovingProduct(null);
+                setMoveTargetId(null);
+                alert('이동되었습니다.');
+            } else {
+                    alert('이동 실패');
+            }
+        } catch(e) {
+                    alert('오류 발생');
+        }
+    }
+
+
+                // Login Function ... (no change needed here)
+                // Logout ...
+
+                // ...
+
+                return (
+                // ...
                 {/* Search Section */}
                 <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 sticky top-4 z-10">
+                    {/* Catalog Selector for Adding */}
+                    <div className="mb-3 flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
+                            <Plus className="w-3 h-3" />
+                            상품 추가 대상:
+                            <span className="text-blue-600 font-bold ml-1">
+                                {catalogs.find(c => c.id === currentCatalogId)?.title || "카탈로그 없음 (기본)"}
+                            </span>
+                        </label>
+                        {/* Optional: Allow changing catalog here too. 
+                             For simplicity, we refrain from duplicating the full dropdown to avoid complex sync issues 
+                             unless user explicitly requested "option when adding". 
+                             The user said "option ... when adding". 
+                             So let's add a small quick switcher here or just reference the main one?
+                             Reference is safer UI-wise "Please select catalog below", 
+                             BUT user wants to choose. 
+                             Let's simple dropdown here.
+                         */}
+                        <select
+                            className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-gray-50 font-medium cursor-pointer"
+                            value={currentCatalogId || ''}
+                            onChange={(e) => setCurrentCatalogId(Number(e.target.value))}
+                        >
+                            {catalogs.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            {catalogs.length === 0 && <option value="">기본</option>}
+                        </select>
+                    </div>
+
                     <div className="flex flex-col sm:flex-row gap-2">
+                        {/* ... Input ... */}
                         <input
                             type="text"
                             placeholder="예: 푸퍼, 데일리지, 가디건 등"
@@ -836,13 +936,25 @@ export default function AdminPage() {
                                         <span className="text-gray-500 text-sm">{item.price}</span>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => handleDeleteProduct(item.id)}
-                                    disabled={deletingId === item.id}
-                                    className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all"
-                                >
-                                    {deletingId === item.id ? <Loader2 className="animate-spin w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
-                                </button>
+                                <div className="flex gap-1.5 ml-2">
+                                    <button
+                                        onClick={() => {
+                                            setMovingProduct(item);
+                                            setMoveTargetId(currentCatalogId);
+                                        }}
+                                        className="text-gray-400 hover:text-blue-500 p-2 hover:bg-blue-50 rounded-full transition-all"
+                                        title="다른 카탈로그로 이동"
+                                    >
+                                        <FolderInput className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteProduct(item.id)}
+                                        disabled={deletingId === item.id}
+                                        className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all"
+                                    >
+                                        {deletingId === item.id ? <Loader2 className="animate-spin w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                         ))}
                         {savedProducts.length === 0 && searchResults.length === 0 && (
@@ -853,6 +965,57 @@ export default function AdminPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Move Product Modal */}
+            <AnimatePresence>
+                {movingProduct && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative"
+                        >
+                            <button
+                                onClick={() => setMovingProduct(null)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-black"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                            <h3 className="admin-title">상품 이동</h3>
+                            <p className="text-sm text-gray-500 mb-4 line-clamp-1">
+                                <span className="font-bold text-gray-900">{movingProduct.name}</span> 상품을 어디로 이동할까요?
+                            </p>
+
+                            <div className="space-y-2 mb-6 max-h-60 overflow-y-auto">
+                                {catalogs.map(c => (
+                                    <button
+                                        key={c.id}
+                                        onClick={() => setMoveTargetId(c.id)}
+                                        className={cn(
+                                            "w-full flex items-center justify-between p-3 rounded-xl border transition-all",
+                                            moveTargetId === c.id
+                                                ? "border-blue-500 bg-blue-50 text-blue-700"
+                                                : "border-gray-100 hover:border-gray-200 hover:bg-gray-50 text-gray-600"
+                                        )}
+                                    >
+                                        <span className="font-bold text-sm">{c.title}</span>
+                                        {moveTargetId === c.id && <Check className="w-4 h-4" />}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={handleMoveProduct}
+                                disabled={!moveTargetId}
+                                className="admin-btn-primary"
+                            >
+                                이동하기
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -50,6 +50,13 @@ export async function deleteProduct(id: number) {
   return await db.delete(products).where(eq(products.id, id)).returning();
 }
 
+export async function updateProductCatalog(productId: number, catalogId: number) {
+  return await db.update(products)
+    .set({ catalogId })
+    .where(eq(products.id, productId))
+    .returning();
+}
+
 // Get products for the PUBLIC page (respects active catalog)
 export async function getProductsBySupporterSlug(supporterSlug: string) {
   const supporter = await getSupporterBySlug(supporterSlug);
