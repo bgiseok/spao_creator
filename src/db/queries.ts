@@ -23,12 +23,29 @@ export async function getSupporterBySlug(slug: string) {
   return result[0] || null;
 }
 
+export async function createSupporter(slug: string, name: string) {
+  return await db.insert(supporters).values({
+    slug,
+    name
+  }).returning();
+}
+
+export async function updateSupporter(id: number, data: { description?: string; profileImage?: string }) {
+  return await db.update(supporters)
+    .set({
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.profileImage !== undefined && { profileImage: data.profileImage }),
+    })
+    .where(eq(supporters.id, id))
+    .returning();
+}
+
 export async function getProductsBySupporterId(supporterId: number) {
   return await db.select().from(products).where(eq(products.supporterId, supporterId));
 }
 
 export async function getProductsBySupporterSlug(supporterSlug: string) {
-    const supporter = await getSupporterBySlug(supporterSlug);
-    if (!supporter) return [];
-    return await getProductsBySupporterId(supporter.id);
+  const supporter = await getSupporterBySlug(supporterSlug);
+  if (!supporter) return [];
+  return await getProductsBySupporterId(supporter.id);
 }

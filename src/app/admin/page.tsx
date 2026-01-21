@@ -1,10 +1,11 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Loader2, Check } from 'lucide-react';
+import { Search, Plus, Loader2, Check, User, LogOut, Settings, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface Product {
     name: string;
@@ -13,28 +14,133 @@ interface Product {
     url: string;
 }
 
+interface Supporter {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    profileImage?: string;
+}
+
 export default function AdminPage() {
+    // Auth State
+    const [supporter, setSupporter] = useState<Supporter | null>(null);
+    const [loginSlug, setLoginSlug] = useState('');
+    const [loginPasscode, setLoginPasscode] = useState('');
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+    // Profile Edit State
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [editDescription, setEditDescription] = useState('');
+    const [editProfileImage, setEditProfileImage] = useState('');
+    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+    // Main App State
     const [keyword, setKeyword] = useState('');
     const [loading, setLoading] = useState(false);
 
     const [searchResults, setSearchResults] = useState<Product[]>([]);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
 
     const [savedProducts, setSavedProducts] = useState<Product[]>([]);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Function to search/scrape
+    const router = useRouter();
+
+
+    // Login Function
+    const handleLogin = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!loginSlug.trim() || !loginPasscode.trim()) return;
+
+        setIsLoggingIn(true);
+        try {
+            const res = await fetch('/api/supporters/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slug: loginSlug, passcode: loginPasscode }),
+            });
+            const data = await res.json();
+
+            if (data.supporter) {
+                setSupporter(data.supporter);
+                setSavedProducts(data.products || []);
+
+                // Init edit state
+                setEditDescription(data.supporter.description || '');
+                setEditProfileImage(data.supporter.profileImage || '');
+
+                localStorage.setItem('spao_supporter_slug', data.supporter.slug);
+            } else {
+                alert('로그인/생성에 실패했습니다.');
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert('오류가 발생했습니다.');
+        }
+        setIsLoggingIn(false);
+    }
+
+    // Logout
+    const handleLogout = () => {
+        setSupporter(null);
+        setSavedProducts([]);
+        setSearchResults([]);
+        setKeyword('');
+        localStorage.removeItem('spao_supporter_slug');
+    }
+
+    // Update Profile Function
+    const handleUpdateProfile = async () => {
+        if (!supporter) return;
+        setIsUpdatingProfile(true);
+        try {
+            const res = await fetch('/api/supporters/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: supporter.id,
+                    description: editDescription,
+                    profileImage: editProfileImage
+                }),
+            });
+            const data = await res.json();
+            if (data.supporter) {
+                setSupporter(data.supporter);
+                setIsEditingProfile(false);
+                alert('프로필이 수정되었습니다.');
+            } else {
+                alert('수정에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다.');
+        }
+        setIsUpdatingProfile(false);
+    };
+
+    // Check for existing session
+    useEffect(() => {
+        const savedSlug = localStorage.getItem('spao_supporter_slug');
+        if (savedSlug) {
+            setLoginSlug(savedSlug);
+        }
+    }, []);
+
+
+    // Search Function
     const handleSearch = async () => {
         if (!keyword) return;
         setLoading(true);
         setSearchResults([]);
-        setSelectedProduct(null);
+        setSelectedProducts([]);
 
         try {
             const res = await fetch('/api/scrape', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: keyword }), // Sending keyword as 'url' param for scraping
+                body: JSON.stringify({ url: keyword }),
             });
             const data = await res.json();
 
@@ -50,29 +156,46 @@ export default function AdminPage() {
         setLoading(false);
     };
 
-    // Function to Save product to DB
+    // Toggle product selection
+    const toggleProduct = (product: Product) => {
+        setSelectedProducts(prev => {
+            const isSelected = prev.some(p => p.url === product.url);
+            if (isSelected) {
+                return prev.filter(p => p.url !== product.url);
+            } else {
+                return [...prev, product];
+            }
+        });
+    };
+
+    // Save Function
     const handleSave = async () => {
-        if (!selectedProduct) return;
+        if (selectedProducts.length === 0 || !supporter) return;
         setIsSaving(true);
         try {
-            const res = await fetch('/api/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    supporterId: 1, // Hardcoded for prototype
-                    name: selectedProduct.name,
-                    price: selectedProduct.price,
-                    imageUrl: selectedProduct.imageUrl,
-                    linkUrl: selectedProduct.url
-                }),
-            });
-            const data = await res.json();
-            if (data.product) {
-                setSavedProducts([data.product, ...savedProducts]);
-                setSelectedProduct(null);
-                setSearchResults([]); // Clear search results after adding
+            const promises = selectedProducts.map(product =>
+                fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        supporterId: supporter.id,
+                        name: product.name,
+                        price: product.price,
+                        imageUrl: product.imageUrl,
+                        linkUrl: product.url
+                    }),
+                }).then(res => res.json())
+            );
+
+            const results = await Promise.all(promises);
+            const newSaved = results.map(r => r.product).filter(Boolean);
+
+            if (newSaved.length > 0) {
+                setSavedProducts([...newSaved, ...savedProducts]);
+                setSelectedProducts([]);
+                setSearchResults([]);
                 setKeyword('');
-                alert('상품이 리스트에 추가되었습니다!');
+                alert(`${newSaved.length}개 상품이 리스트에 추가되었습니다!`);
             } else {
                 alert('저장에 실패했습니다.');
             }
@@ -83,12 +206,133 @@ export default function AdminPage() {
         setIsSaving(false);
     };
 
+
+    // RENDER: Login Screen
+    if (!supporter) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+                <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-gray-100 text-center">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">SPAO Creator</h1>
+                    <p className="text-gray-500 mb-8">본인의 서포터즈 ID(영어)를 입력하세요.</p>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="relative">
+                            <User className="absolute left-4 top-3.5 text-gray-400 w-5 h-5" />
+                            <input
+                                type="text"
+                                placeholder="예: jisoo, minji"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg"
+                                value={loginSlug}
+                                onChange={(e) => setLoginSlug(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <div className="absolute left-4 top-3.5 text-gray-400 font-bold text-sm">🔒</div>
+                            <input
+                                type="password"
+                                placeholder="공통 코드 (Quiz 정답)"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                                value={loginPasscode}
+                                onChange={(e) => setLoginPasscode(e.target.value)}
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoggingIn || !loginSlug || !loginPasscode}
+                            className="w-full bg-black text-white font-bold py-3.5 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                        >
+                            {isLoggingIn ? <Loader2 className="animate-spin" /> : "시작하기"}
+                        </button>
+                    </form>
+                    <p className="text-xs text-gray-400 mt-6">
+                        *처음 입력하는 ID는 자동으로 계정이 생성됩니다.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+
+    // RENDER: Main Dashboard
     return (
         <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+
+            {/* Edit Profile Modal */}
+            <AnimatePresence>
+                {isEditingProfile && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
+                        >
+                            <button
+                                onClick={() => setIsEditingProfile(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-black"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+
+                            <h2 className="text-xl font-bold mb-4">프로필 수정</h2>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">소개글</label>
+                                    <textarea
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                                        placeholder="서포터즈 소개글을 입력하세요."
+                                        value={editDescription}
+                                        onChange={(e) => setEditDescription(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">프로필 이미지 URL</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="이미지 주소를 입력하세요 (선택 사항)"
+                                        value={editProfileImage}
+                                        onChange={(e) => setEditProfileImage(e.target.value)}
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">인스타그램 프로필 사진 주소 등을 복사해오세요.</p>
+                                </div>
+
+                                <button
+                                    onClick={handleUpdateProfile}
+                                    disabled={isUpdatingProfile}
+                                    className="w-full bg-black text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                                >
+                                    {isUpdatingProfile ? <Loader2 className="animate-spin" /> : "저장하기"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+
             <div className="w-full max-w-2xl">
-                <header className="mb-8 text-center">
+                <header className="mb-8 flex flex-col items-center relative">
                     <h1 className="text-3xl font-bold text-gray-900 tracking-tight">SPAO Creator Studio</h1>
-                    <p className="text-gray-500 mt-2">상품명이나 URL로 검색해서 리스트를 만들어보세요.</p>
+                    <div className="mt-2 flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="text-sm font-bold text-gray-700">Hi, {supporter.name} ({supporter.slug})</span>
+
+                        {/* Settings Button */}
+                        <button
+                            onClick={() => setIsEditingProfile(true)}
+                            className="ml-2 text-gray-400 hover:text-black p-1 hover:bg-gray-100 rounded-full transition-all"
+                        >
+                            <Settings className="w-4 h-4" />
+                        </button>
+
+                        <button onClick={handleLogout} className="ml-1 text-gray-400 hover:text-red-500 p-1 hover:bg-red-50 rounded-full transition-all">
+                            <LogOut className="w-4 h-4" />
+                        </button>
+                    </div>
                 </header>
 
                 {/* Search Section */}
@@ -124,44 +368,47 @@ export default function AdminPage() {
                         >
                             <div className="flex justify-between items-center mb-4 px-2">
                                 <h2 className="text-lg font-bold text-gray-900">검색 결과 <span className="text-blue-600">{searchResults.length}</span></h2>
-                                {selectedProduct && (
+                                {selectedProducts.length > 0 && (
                                     <button
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-md animate-pulse flex items-center gap-2"
                                     >
                                         {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                        선택한 상품 추가하기
+                                        선택한 {selectedProducts.length}개 상품 추가하기
                                     </button>
                                 )}
                             </div>
 
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                {searchResults.map((item, idx) => (
-                                    <div
-                                        key={idx}
-                                        onClick={() => setSelectedProduct(item)}
-                                        className={cn(
-                                            "cursor-pointer group relative bg-white rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg",
-                                            selectedProduct?.url === item.url ? "border-blue-600 ring-2 ring-blue-600 ring-offset-2" : "border-transparent"
-                                        )}
-                                    >
-                                        <div className="aspect-[3/4] bg-gray-100 relative">
-                                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                                            {selectedProduct?.url === item.url && (
-                                                <div className="absolute inset-0 bg-blue-600/20 flex items-center justify-center">
-                                                    <div className="bg-blue-600 text-white p-2 rounded-full shadow-lg">
-                                                        <Check className="w-6 h-6" />
-                                                    </div>
-                                                </div>
+                                {searchResults.map((item, idx) => {
+                                    const isSelected = selectedProducts.some(p => p.url === item.url);
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={() => toggleProduct(item)}
+                                            className={cn(
+                                                "cursor-pointer group relative bg-white rounded-xl overflow-hidden border-2 transition-all hover:shadow-lg",
+                                                isSelected ? "border-blue-600 ring-2 ring-blue-600 ring-offset-2" : "border-transparent"
                                             )}
+                                        >
+                                            <div className="aspect-[3/4] bg-gray-100 relative">
+                                                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                                {isSelected && (
+                                                    <div className="absolute inset-0 bg-blue-600/20 flex items-center justify-center">
+                                                        <div className="bg-blue-600 text-white p-2 rounded-full shadow-lg">
+                                                            <Check className="w-6 h-6" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-3">
+                                                <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-snug">{item.name}</h3>
+                                                <p className="text-gray-500 text-xs mt-1 font-medium">{item.price}</p>
+                                            </div>
                                         </div>
-                                        <div className="p-3">
-                                            <h3 className="font-bold text-gray-900 text-sm line-clamp-2 leading-snug">{item.name}</h3>
-                                            <p className="text-gray-500 text-xs mt-1 font-medium">{item.price}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </motion.div>
                     )}
@@ -169,7 +416,12 @@ export default function AdminPage() {
 
                 {/* Saved List Preview */}
                 <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-4 px-1">등록된 리스트 <span className="text-gray-400 font-normal">({savedProducts.length})</span></h2>
+                    <div className="flex justify-between items-end mb-4 px-1">
+                        <h2 className="text-xl font-bold text-gray-900">등록된 리스트 <span className="text-gray-400 font-normal">({savedProducts.length})</span></h2>
+                        <a href={`/${supporter.slug}`} target="_blank" className="text-sm font-bold text-blue-600 hover:underline">
+                            내 링크트리 보기 →
+                        </a>
+                    </div>
 
                     <div className="grid grid-cols-1 gap-3">
                         {savedProducts.map((item, idx) => (
