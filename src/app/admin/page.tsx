@@ -887,6 +887,43 @@ export default function AdminPage() {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Sticky Action Bar for Search Results */}
+            <AnimatePresence>
+                {selectedProducts.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-4"
+                    >
+                        <div className="bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-inner">
+                                    {selectedProducts.length}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-gray-900">상품 선택됨</span>
+                                    <button
+                                        onClick={() => setSelectedProducts([])}
+                                        className="text-xs text-gray-500 hover:text-red-500 underline text-left transition-colors"
+                                    >
+                                        선택 해제
+                                    </button>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                {isSaving ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5 text-white" />}
+                                {selectedProducts.length}개 상품 추가하기
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
