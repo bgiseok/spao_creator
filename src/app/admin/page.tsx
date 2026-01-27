@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
-import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink, ChevronDown, FolderInput, GripVertical, Globe } from 'lucide-react';
+import { Search, Plus, Loader2, Check, User, LogOut, Settings, X, Trash2, Upload, Copy, ExternalLink, ChevronDown, FolderInput, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -776,16 +776,14 @@ export default function AdminPage() {
                                             e.stopPropagation();
                                             handleSetActiveCatalog(c.id);
                                         }}
-                                        className="absolute -top-3 -right-2 bg-white border-2 border-green-500 text-green-600 text-[10px] px-2 py-0.5 rounded-full font-black shadow-md hover:bg-green-50 hover:scale-105 active:scale-95 transition-all flex items-center gap-1 z-20"
+                                        className="absolute -top-2.5 -right-1 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black shadow-sm hover:scale-105 active:scale-95 transition-transform z-20"
                                     >
-                                        <Globe className="w-2.5 h-2.5" />
-                                        대표로 설정
+                                        OFF
                                     </button>
                                 )}
                                 {currentCatalogId === c.id && c.isActive && (
-                                    <div className="absolute -top-3 -right-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black shadow-md flex items-center gap-1 z-20">
-                                        <Check className="w-2.5 h-2.5" />
-                                        대표 카탈로그
+                                    <div className="absolute -top-2.5 -right-1 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-black shadow-sm border border-green-200 z-20">
+                                        ON
                                     </div>
                                 )}
                             </div>
