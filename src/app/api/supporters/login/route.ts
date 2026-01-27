@@ -6,12 +6,6 @@ export async function POST(request: Request) {
     try {
         const { slug, name, passcode } = await request.json();
 
-        // Verify Passcode
-        const correctPasscode = process.env.ADMIN_PASSCODE || 'spao';
-        if (passcode !== correctPasscode) {
-            return NextResponse.json({ error: 'Invalid passcode' }, { status: 401 });
-        }
-
         if (!slug) {
             return NextResponse.json({ error: 'Slug is required' }, { status: 400 });
         }

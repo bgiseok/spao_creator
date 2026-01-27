@@ -35,7 +35,6 @@ export default function AdminPage() {
     // Auth State
     const [supporter, setSupporter] = useState<Supporter | null>(null);
     const [loginSlug, setLoginSlug] = useState('');
-    const [loginPasscode, setLoginPasscode] = useState('');
     const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     // New User State
@@ -124,14 +123,14 @@ export default function AdminPage() {
     // Login Function
     const handleLogin = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!loginSlug.trim() || !loginPasscode.trim()) return;
+        if (!loginSlug.trim()) return;
 
         setIsLoggingIn(true);
         try {
             const res = await fetch('/api/supporters/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slug: loginSlug, passcode: loginPasscode }),
+                body: JSON.stringify({ slug: loginSlug }),
             });
             const data = await res.json();
 
@@ -358,6 +357,23 @@ export default function AdminPage() {
         }
     }, []);
 
+    // Fetch Products when currentCatalogId changes
+    useEffect(() => {
+        const refreshProducts = async () => {
+            if (!supporter || !currentCatalogId) return;
+            try {
+                const res = await fetch(`/api/products?supporterId=${supporter.id}&catalogId=${currentCatalogId}`);
+                const data = await res.json();
+                if (data.products) {
+                    setSavedProducts(data.products);
+                }
+            } catch (e) {
+                console.error("Failed to refresh products", e);
+            }
+        };
+        refreshProducts();
+    }, [currentCatalogId, supporter]);
+
 
     // Search Function
     const handleSearch = async () => {
@@ -475,20 +491,10 @@ export default function AdminPage() {
                             />
                         </div>
 
-                        <div className="relative">
-                            <div className="absolute left-4 top-3.5 text-gray-400 font-bold text-sm">🔒</div>
-                            <input
-                                type="password"
-                                placeholder="공통 코드 (Quiz 정답)"
-                                className="admin-input pl-12"
-                                value={loginPasscode}
-                                onChange={(e) => setLoginPasscode(e.target.value)}
-                            />
-                        </div>
 
                         <button
                             type="submit"
-                            disabled={isLoggingIn || !loginSlug || !loginPasscode}
+                            disabled={isLoggingIn || !loginSlug}
                             className="admin-btn-primary"
                         >
                             {isLoggingIn ? <Loader2 className="animate-spin" /> : "시작하기"}
@@ -710,131 +716,188 @@ export default function AdminPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Saved List Preview */}
-                <div id="saved-list" className="w-full">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 px-1 gap-4">
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                등록된 상품 관리
-                                <span className="text-gray-400 font-normal">({savedProducts.length})</span>
-                            </h2>
-                        </div>
-
-                        <div className="flex items-center gap-4 w-full sm:w-auto justify-start sm:justify-end px-1">
+                {/* Catalog Tabs */}
+                <div className="mb-6 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            등록된 상품 관리
+                            <span className="text-gray-400 font-normal">({savedProducts.length})</span>
+                        </h2>
+                        <div className="flex items-center gap-4">
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
                                     alert("링크가 복사되었습니다!");
                                 }}
-                                className="flex items-center gap-1.5 text-sm font-bold text-gray-400 hover:text-gray-900 transition-colors"
+                                className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors"
                             >
                                 <Copy className="w-3.5 h-3.5" />
                                 링크 복사
                             </button>
-                            <a href={`/${supporter.slug}`} target="_blank" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                            <a href={`/${supporter.slug}`} target="_blank" className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
                                 내 링크트리 보기 →
                             </a>
                         </div>
                     </div>
 
-                    {/* Catalog Management Modal */}
-                    <AnimatePresence>
-                        {showCatalogModal && (
-                            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                                <motion.div
-                                    initial={{ scale: 0.9, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.9, opacity: 0 }}
-                                    className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative"
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        <button
+                            onClick={() => setShowCatalogModal(true)}
+                            className="shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                            title="카탈로그 추가/관리"
+                        >
+                            <Plus className="w-5 h-5" />
+                        </button>
+
+                        {catalogs.map(c => (
+                            <div key={c.id} className="relative shrink-0">
+                                <button
+                                    onClick={() => setCurrentCatalogId(c.id)}
+                                    className={cn(
+                                        "px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 flex items-center gap-2",
+                                        currentCatalogId === c.id
+                                            ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200"
+                                            : "bg-white border-gray-100 text-gray-600 hover:border-gray-300"
+                                    )}
                                 >
+                                    {c.title}
+                                    {c.isActive && (
+                                        <span className={cn(
+                                            "w-1.5 h-1.5 rounded-full",
+                                            currentCatalogId === c.id ? "bg-white" : "bg-green-500"
+                                        )} />
+                                    )}
+                                </button>
+
+                                {/* Quick Active Toggle */}
+                                {currentCatalogId === c.id && !c.isActive && (
                                     <button
-                                        onClick={() => setShowCatalogModal(false)}
-                                        className="absolute top-4 right-4 text-gray-400 hover:text-black"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSetActiveCatalog(c.id);
+                                        }}
+                                        className="absolute -top-2 -right-1 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black shadow-sm hover:scale-105 active:scale-95 transition-transform"
                                     >
-                                        <X className="w-6 h-6" />
+                                        OFF
                                     </button>
-                                    <h3 className="admin-title">카탈로그 관리</h3>
-
-                                    <div className="mb-6">
-                                        <label className="admin-label">새 카탈로그 만들기</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                className="admin-input py-2"
-                                                placeholder="예: 봄 데일리룩"
-                                                value={newCatalogTitle}
-                                                onChange={(e) => setNewCatalogTitle(e.target.value)}
-                                            />
-                                            <button
-                                                onClick={handleCreateCatalog}
-                                                disabled={isCreatingCatalog || !newCatalogTitle.trim()}
-                                                className="bg-black text-white rounded-xl px-5 py-2 font-bold disabled:opacity-50 whitespace-nowrap"
-                                            >
-                                                추가
-                                            </button>
-                                        </div>
+                                )}
+                                {currentCatalogId === c.id && c.isActive && (
+                                    <div className="absolute -top-2 -right-1 bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded-full font-black shadow-sm border border-green-200">
+                                        ON
                                     </div>
-
-                                    <div>
-                                        <label className="admin-label mb-2">카탈로그 목록 (노출 설정)</label>
-                                        <ul className="space-y-2 max-h-60 overflow-y-auto">
-                                            {catalogs.map(c => (
-                                                <li key={c.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                                    <span className="font-bold text-sm text-gray-800">{c.title}</span>
-                                                    <button
-                                                        onClick={() => handleSetActiveCatalog(c.id)}
-                                                        className={cn(
-                                                            "px-3 py-1 rounded-full text-xs font-bold transition-all",
-                                                            c.isActive
-                                                                ? "bg-green-100 text-green-700"
-                                                                : "bg-gray-200 text-gray-500 hover:bg-gray-300"
-                                                        )}
-                                                    >
-                                                        {c.isActive ? '노출 중' : '노출 하기'}
-                                                    </button>
-                                                </li>
-                                            ))}
-                                            {catalogs.length === 0 && <p className="text-gray-400 text-sm text-center py-2">생성된 카탈로그가 없습니다.</p>}
-                                        </ul>
-                                    </div>
-                                </motion.div>
+                                )}
                             </div>
-                        )}
-                    </AnimatePresence>
-                    <Reorder.Group axis="y" values={savedProducts} onReorder={handleReorder} className="space-y-3">
-                        {savedProducts.map((item) => (
-                            <Reorder.Item key={item.id} value={item} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-shadow relative">
-                                <div className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-500">
-                                    <GripVertical className="w-5 h-5" />
-                                </div>
-                                <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100 select-none pointer-events-none" />
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-keep">{item.name}</h3>
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                        {item.discountRate && (
-                                            <span className="text-red-600 font-bold text-xs">{item.discountRate}%</span>
-                                        )}
-                                        <span className="text-gray-500 text-sm">{item.price}</span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Catalog Management Modal */}
+                <AnimatePresence>
+                    {showCatalogModal && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative"
+                            >
+                                <button
+                                    onClick={() => setShowCatalogModal(false)}
+                                    className="absolute top-4 right-4 text-gray-400 hover:text-black"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                                <h3 className="admin-title">카탈로그 관리</h3>
+
+                                <div className="mb-6">
+                                    <label className="admin-label">새 카탈로그 만들기</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            className="admin-input py-2"
+                                            placeholder="예: 봄 데일리룩"
+                                            value={newCatalogTitle}
+                                            onChange={(e) => setNewCatalogTitle(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={handleCreateCatalog}
+                                            disabled={isCreatingCatalog || !newCatalogTitle.trim()}
+                                            className="bg-black text-white rounded-xl px-5 py-2 font-bold disabled:opacity-50 whitespace-nowrap"
+                                        >
+                                            추가
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="flex gap-1.5 ml-2">
-                                    <button
-                                        onClick={() => handleDeleteProduct(item.id)}
-                                        disabled={deletingId === item.id}
-                                        className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all"
-                                    >
-                                        {deletingId === item.id ? <Loader2 className="animate-spin w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
-                                    </button>
-                                </div>
-                            </Reorder.Item>
-                        ))}
-                    </Reorder.Group>
 
-                    {savedProducts.length === 0 && searchResults.length === 0 && (
-                        <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
-                            <p>등록된 상품이 없습니다.</p>
+                                <div>
+                                    <label className="admin-label mb-2">카탈로그 목록 (노출 설정)</label>
+                                    <ul className="space-y-2 max-h-60 overflow-y-auto">
+                                        {catalogs.map(c => (
+                                            <li key={c.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                                <span className="font-bold text-sm text-gray-800">{c.title}</span>
+                                                <button
+                                                    onClick={() => handleSetActiveCatalog(c.id)}
+                                                    className={cn(
+                                                        "px-3 py-1 rounded-full text-xs font-bold transition-all",
+                                                        c.isActive
+                                                            ? "bg-green-100 text-green-700"
+                                                            : "bg-gray-200 text-gray-500 hover:bg-gray-300"
+                                                    )}
+                                                >
+                                                    {c.isActive ? '노출 중' : '노출 하기'}
+                                                </button>
+                                            </li>
+                                        ))}
+                                        {catalogs.length === 0 && <p className="text-gray-400 text-sm text-center py-2">생성된 카탈로그가 없습니다.</p>}
+                                    </ul>
+                                </div>
+                            </motion.div>
                         </div>
                     )}
-                </div>
+                </AnimatePresence>
+                <Reorder.Group axis="y" values={savedProducts} onReorder={handleReorder} className="space-y-3">
+                    {savedProducts.map((item) => (
+                        <Reorder.Item key={item.id} value={item} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-shadow relative">
+                            <div className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-500">
+                                <GripVertical className="w-5 h-5" />
+                            </div>
+                            <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100 select-none pointer-events-none" />
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-keep">{item.name}</h3>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    {item.discountRate && (
+                                        <span className="text-red-600 font-bold text-xs">{item.discountRate}%</span>
+                                    )}
+                                    <span className="text-gray-500 text-sm">{item.price}</span>
+                                </div>
+                            </div>
+                            <div className="flex gap-1.5 ml-2">
+                                <button
+                                    onClick={() => {
+                                        setMovingProduct(item);
+                                        setMoveTargetId(currentCatalogId);
+                                    }}
+                                    className="text-gray-400 hover:text-blue-500 p-2 hover:bg-blue-50 rounded-full transition-all"
+                                    title="다른 카탈로그로 이동"
+                                >
+                                    <FolderInput className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteProduct(item.id)}
+                                    disabled={deletingId === item.id}
+                                    className="text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-all"
+                                >
+                                    {deletingId === item.id ? <Loader2 className="animate-spin w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </Reorder.Item>
+                    ))}
+                </Reorder.Group>
+
+                {savedProducts.length === 0 && searchResults.length === 0 && (
+                    <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                        <p>등록된 상품이 없습니다.</p>
+                    </div>
+                )}
             </div>
 
             {/* Move Product Modal */}
