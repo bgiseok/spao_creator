@@ -718,12 +718,12 @@ export default function AdminPage() {
 
                 {/* Catalog Tabs */}
                 <div className="mb-6 flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                             등록된 상품 관리
                             <span className="text-gray-400 font-normal">({savedProducts.length})</span>
                         </h2>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 self-end sm:self-auto">
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/${supporter.slug}`);
@@ -740,7 +740,7 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex items-center gap-2 overflow-x-auto pt-4 pb-2 scrollbar-hide">
                         <button
                             onClick={() => setShowCatalogModal(true)}
                             className="shrink-0 w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all active:scale-95"
@@ -776,7 +776,7 @@ export default function AdminPage() {
                                             e.stopPropagation();
                                             handleSetActiveCatalog(c.id);
                                         }}
-                                        className="absolute -top-2 -right-1 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black shadow-sm hover:scale-105 active:scale-95 transition-transform"
+                                        className="absolute -top-2.5 -right-1 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black shadow-sm hover:scale-105 active:scale-95 transition-transform"
                                     >
                                         OFF
                                     </button>
@@ -862,7 +862,7 @@ export default function AdminPage() {
                             </div>
                             <img src={item.imageUrl} alt={item.name} className="w-16 h-20 object-cover rounded-lg bg-gray-100 select-none pointer-events-none" />
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-gray-900 truncate whitespace-normal line-clamp-2 break-keep">{item.name}</h3>
+                                <h3 className="font-bold text-gray-900 whitespace-normal line-clamp-2 break-keep leading-tight">{item.name}</h3>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                     {item.discountRate && (
                                         <span className="text-red-600 font-bold text-xs">{item.discountRate}%</span>
