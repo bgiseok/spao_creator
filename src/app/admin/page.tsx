@@ -717,7 +717,7 @@ export default function AdminPage() {
                 </AnimatePresence>
 
                 {/* Catalog Tabs */}
-                <div className="mb-6 flex flex-col gap-4">
+                <div className="w-full mb-6 flex flex-col gap-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                             등록된 상품 관리
@@ -854,7 +854,7 @@ export default function AdminPage() {
                         </div>
                     )}
                 </AnimatePresence>
-                <Reorder.Group axis="y" values={savedProducts} onReorder={handleReorder} className="space-y-3">
+                <Reorder.Group axis="y" values={savedProducts} onReorder={handleReorder} className="w-full space-y-3">
                     {savedProducts.map((item) => (
                         <Reorder.Item key={item.id} value={item} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-shadow relative">
                             <div className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-500">
@@ -894,7 +894,7 @@ export default function AdminPage() {
                 </Reorder.Group>
 
                 {savedProducts.length === 0 && searchResults.length === 0 && (
-                    <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                    <div className="w-full text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
                         <p>등록된 상품이 없습니다.</p>
                     </div>
                 )}
