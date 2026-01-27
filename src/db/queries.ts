@@ -166,6 +166,19 @@ export async function setActiveCatalog(supporterId: number, catalogId: number) {
     .returning();
 }
 
+export async function deleteCatalog(supporterId: number, catalogId: number) {
+  // 1. Unassign products from this catalog
+  await db.update(products)
+    .set({ catalogId: null })
+    .where(and(eq(products.supporterId, supporterId), eq(products.catalogId, catalogId)));
+
+  // 2. Delete the catalog
+  return await db.delete(catalogs)
+    .where(and(eq(catalogs.id, catalogId), eq(catalogs.supporterId, supporterId)))
+    .returning();
+}
+
+
 // --- Insights & Logs ---
 
 // Log Search Keyword (Upsert-like logic)

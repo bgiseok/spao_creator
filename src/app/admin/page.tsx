@@ -257,6 +257,35 @@ export default function AdminPage() {
         }
     }
 
+    const handleDeleteCatalog = async (catalogId: number) => {
+        if (!supporter) return;
+        if (!confirm('이 카탈로그를 삭제하시겠습니까? 카탈로그 내의 상품은 삭제되지 않고 미분류 상태가 됩니다.')) return;
+
+        try {
+            const res = await fetch(`/api/catalogs?supporterId=${supporter.id}&catalogId=${catalogId}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                setCatalogs(catalogs.filter(c => c.id !== catalogId));
+                // If the deleted catalog was the current one, reset currentCatalogId
+                if (currentCatalogId === catalogId) {
+                    const remaining = catalogs.filter(c => c.id !== catalogId);
+                    if (remaining.length > 0) setCurrentCatalogId(remaining[0].id);
+                    else setCurrentCatalogId(null);
+                }
+                // If the deleted catalog was the active one, reset activeCatalogId
+                if (activeCatalogId === catalogId) {
+                    setActiveCatalogId(null);
+                }
+                alert('카탈로그가 삭제되었습니다.');
+            } else {
+                alert('삭제 실패');
+            }
+        } catch (e) {
+            alert('오류 발생');
+        }
+    }
+
 
 
     // Logout
@@ -833,18 +862,30 @@ export default function AdminPage() {
                                     <ul className="space-y-2 max-h-60 overflow-y-auto">
                                         {catalogs.map(c => (
                                             <li key={c.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                                <span className="font-bold text-sm text-gray-800">{c.title}</span>
-                                                <button
-                                                    onClick={() => handleSetActiveCatalog(c.id)}
-                                                    className={cn(
-                                                        "px-3 py-1 rounded-full text-xs font-bold transition-all",
-                                                        c.isActive
-                                                            ? "bg-green-100 text-green-700"
-                                                            : "bg-gray-200 text-gray-500 hover:bg-gray-300"
-                                                    )}
-                                                >
-                                                    {c.isActive ? '노출 중' : '노출 하기'}
-                                                </button>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-sm text-gray-800">{c.title}</span>
+                                                    {c.isActive && <span className="text-[10px] text-green-600 font-bold">노출 중</span>}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleSetActiveCatalog(c.id)}
+                                                        className={cn(
+                                                            "px-3 py-1 rounded-full text-xs font-bold transition-all",
+                                                            c.isActive
+                                                                ? "bg-green-100 text-green-700"
+                                                                : "bg-gray-200 text-gray-500 hover:bg-gray-300"
+                                                        )}
+                                                    >
+                                                        {c.isActive ? '노출 설정됨' : '노출 하기'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCatalog(c.id)}
+                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                                        title="카탈로그 삭제"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </li>
                                         ))}
                                         {catalogs.length === 0 && <p className="text-gray-400 text-sm text-center py-2">생성된 카탈로그가 없습니다.</p>}

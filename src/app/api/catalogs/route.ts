@@ -1,5 +1,5 @@
 
-import { createCatalog, getCatalogs } from '@/db/queries';
+import { createCatalog, getCatalogs, deleteCatalog } from '@/db/queries';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -30,5 +30,23 @@ export async function POST(request: Request) {
 
     } catch (error) {
         return NextResponse.json({ error: 'Failed to create catalog' }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const supporterId = searchParams.get('supporterId');
+        const catalogId = searchParams.get('catalogId');
+
+        if (!supporterId || !catalogId) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        await deleteCatalog(parseInt(supporterId), parseInt(catalogId));
+        return NextResponse.json({ success: true });
+
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to delete catalog' }, { status: 500 });
     }
 }
